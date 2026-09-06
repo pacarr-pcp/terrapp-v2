@@ -194,7 +194,10 @@ function _rowToReg(vals, filaHoja) {
   };
 }
 
-/** Para el selector de la inspección: subconjunto NO sensible. */
+/**
+ * Para el selector del encabezado. Devuelve nombre (solicitante), empresa,
+ * sede y comuna — pero NO la calle (esa se arma en el backend al crear).
+ */
 function sedesDeOte(body) {
   _auth(body);
   var ote = String(body.ote || '').trim();
@@ -205,7 +208,7 @@ function sedesDeOte(body) {
   for (var i = 1; i < vals.length; i++) {
     if (String(vals[i][CFG.LISTA_COLS.ote - 1]).trim() === ote) {
       var r = _rowToReg(vals[i], i + 1);
-      out.push({ id:r.id, cliente:r.cliente, sede:r.sede, comuna:r.comuna });
+      out.push({ id:r.id, cliente:r.cliente, nombre:r.nombre, sede:r.sede, comuna:r.comuna });
     }
   }
   return { ok:true, sedes:out };
