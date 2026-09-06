@@ -244,20 +244,32 @@ de viga/perfil son parte de la Fase 2.
 **App OTE** ya está integrada (sección Clientes). Kg+ portado a
 `data/pesos.json` + `pesoColada()`.
 
-## Pendientes (pausa 2026-09-06)
+## Pendientes (act. 2026-09-06, PWA v12)
 
-1. **Solicitante por separado.** Un OTE puede tener varios nombres de
-   contacto, no sólo varias direcciones. El selector de la inspección (y el
-   editor de Clientes) debe permitir elegir/cambiar el *solicitante*
-   (ListaOCP col C) de forma independiente de la dirección — igual que se hizo
-   con la sede/dirección.
-2. **PDF — fila "ídem".** Faltan detalles en las filas 2ª+ de cada colada:
-   la numeración de la columna N° y los conteos de la fila 6 (totales) no
-   salen bien en el PDF generado. Revisar las fórmulas de la plantilla contra
-   las filas que escribe el backend antes de poner los `"`.
-3. **Corregir después del PDF.** Flujo para editar una inspección ya emitida
-   y volver a generar el PDF (y actualizar `Archivo2`).
-4. **Pesos calculados (fallas).** El camino sin tabla ("Calculado*") tiene
-   bugs por tipo: identificar bien el espesor según el perfil, y manejar
-   dimensiones incompletas tipo `0x0x…`. Revisar tipo por tipo. Enlaza con la
-   cuña de precio por espesor (Fase 2).
+### Hecho desde la última lista
+- ✅ **Solicitante por separado** — `sedesDeOte` manda el nombre; el encabezado
+  lista `solicitante · sede · comuna · empresa` con filtro por texto.
+- ✅ **Correlativo de coladas** — al pulsar PDF se exige 01…N (sin huecos,
+  repetidos ni desorden) → aviso "Revisar correlativo de coladas". Botón
+  "Ordenar" + "Col. ##" en fucsia cuando hay desorden.
+- ✅ Kg+ portado: `data/pesos.json` (14 tablas) + `pesoColada()`.
+- ✅ Ronda de cambios visuales (títulos, colores, layout del encabezado,
+  modal de resumen de colada, checkbox/marco identificada, etc.).
+
+### Abierto
+1. **PDF — filas "ídem".** En las filas 2ª+ de cada colada, la numeración de
+   la columna N° y los conteos de la fila 6 (totales) no salen bien. Revisar
+   las fórmulas de la plantilla contra las filas que escribe el backend antes
+   de poner los `"`.
+2. **Corregir después del PDF.** Flujo para editar una inspección ya emitida y
+   volver a generar el PDF (y actualizar `Archivo2`).
+3. **Pesos "calculados" (sin tabla).** El camino "Calculado*" tiene bugs por
+   tipo: identificar bien el espesor según el perfil (viga = tabla por
+   `tipo+alto`; perfil = otra posición) y manejar dimensiones incompletas
+   tipo `0x0x…`. Revisar tipo por tipo.
+4. **Fase 2 — Precio por espesor / EP.** Falta la tabla de precios (la prepara
+   PCP) → `data/precios.json` o hoja `Precios`. Cuñas ya puestas:
+   `CFG.PRECIO`, `precioMuestra()`, `_espesor(tipo, dimension)`.
+5. **Repo por Git.** Hoy se sube por "Upload files". Para pasar a `git push`:
+   mover `pwa/` a la raíz del repo, o renombrar `pwa` → `docs` y poner Pages
+   en `/docs`.
