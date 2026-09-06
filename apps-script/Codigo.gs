@@ -371,8 +371,9 @@ function crearInspeccion(body) {
          .setValues(filas.map(function (r) { return [ r[0] ]; }));   // A: "RAM"-nn
     } catch (eA) { avisos.push('col A: ' + _msg(eA)); }
     try {
-      tmp.getRange(CFG.FILA_MUESTRA_1, CFG.MUESTRA_COLS.idem, filas.length, 1)
-         .setValues(filas.map(function (r) { return [ r[9] ]; }));   // J: últimos 4 de B
+      var rngJ = tmp.getRange(CFG.FILA_MUESTRA_1, CFG.MUESTRA_COLS.idem, filas.length, 1);
+      rngJ.setNumberFormat('@');                                     // texto: conserva el 0 inicial
+      rngJ.setValues(filas.map(function (r) { return [ r[9] ]; }));  // J: últimos 4 de B ("0103"…)
     } catch (eJ) { avisos.push('col J: ' + _msg(eJ)); }
     try {
       tmp.getRange(CFG.FILA_KEY, k.nMuestras).setValue(filas.length); // E8
@@ -452,7 +453,17 @@ function archivar(ss, tmp, nMuestras) {
   var nFilas = 1 + nMuestras;
   var datos = tmp.getRange(CFG.FILA_COPIA_DESDE, 1, nFilas, CFG.COL_COPIA_HASTA).getValues();
   if (datos.length < 1) return;                 // guarda: nunca getRange con 0 filas
-  arch.getRange(arch.getLastRow() + 1, 1, datos.length, CFG.COL_COPIA_HASTA).setValues(datos);
+
+  // asegurar 'ídem' como texto tal cual en Archivo2 (que no lo lea como número)
+  var jRel = CFG.MUESTRA_COLS.idem;             // 10
+  for (var i = 1; i < datos.length; i++) {      // fila 0 = KEY, no lleva ídem
+    if (datos[i][jRel - 1] !== '' && datos[i][jRel - 1] != null) {
+      datos[i][jRel - 1] = String(datos[i][jRel - 1]);
+    }
+  }
+  var destino = arch.getRange(arch.getLastRow() + 1, 1, datos.length, CFG.COL_COPIA_HASTA);
+  try { arch.getRange(destino.getRow(), jRel, datos.length, 1).setNumberFormat('@'); } catch (e) {}
+  destino.setValues(datos);
 }
 
 // ===================== administración =====================
