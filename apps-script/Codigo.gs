@@ -345,17 +345,38 @@ function crearInspeccion(body) {
     tmp = plantilla.copyTo(ss);
     tmp.setName('tmp_' + Utilities.getUuid().slice(0, 8));
 
+    var avisos = [];
+
+    // asegurar que exista la columna J (si la plantilla venía recortada a 9 col.)
+    if (tmp.getMaxColumns() < ANCHO) {
+      tmp.insertColumnsAfter(tmp.getMaxColumns(), ANCHO - tmp.getMaxColumns());
+      try { tmp.hideColumns(CFG.MUESTRA_COLS.idem); } catch (eh) {}
+    }
+
     // fila KEY
     var k = CFG.KEY_COLS;
     tmp.getRange(CFG.FILA_KEY, k.ram).setValue(ram);
     tmp.getRange(CFG.FILA_KEY, k.ar).setValue(ar);
     tmp.getRange(CFG.FILA_KEY, k.ote).setValue(ote);
     tmp.getRange(CFG.FILA_KEY, k.fecha).setValue(fecha);
-    tmp.getRange(CFG.FILA_KEY, k.nMuestras).setValue(filas.length);   // E8 = total de muestras
     tmp.getRange(CFG.FILA_KEY, k.inspector).setValue(inspector);
 
-    // muestras: valores REALES en todas las filas A..J (así calculan las fórmulas)
-    tmp.getRange(CFG.FILA_MUESTRA_1, 1, filas.length, ANCHO).setValues(filas);
+    // muestras: columnas B..I (rango probado)
+    tmp.getRange(CFG.FILA_MUESTRA_1, CFG.MUESTRA_COLS.muestra, filas.length, 8)
+       .setValues(filas.map(function (r) { return r.slice(1, 9); }));
+
+    // extras — no deben impedir el PDF ni el archivado
+    try {
+      tmp.getRange(CFG.FILA_MUESTRA_1, CFG.MUESTRA_COLS.correl, filas.length, 1)
+         .setValues(filas.map(function (r) { return [ r[0] ]; }));   // A: "RAM"-nn
+    } catch (eA) { avisos.push('col A: ' + _msg(eA)); }
+    try {
+      tmp.getRange(CFG.FILA_MUESTRA_1, CFG.MUESTRA_COLS.idem, filas.length, 1)
+         .setValues(filas.map(function (r) { return [ r[9] ]; }));   // J: últimos 4 de B
+    } catch (eJ) { avisos.push('col J: ' + _msg(eJ)); }
+    try {
+      tmp.getRange(CFG.FILA_KEY, k.nMuestras).setValue(filas.length); // E8
+    } catch (eE) { avisos.push('E8: ' + _msg(eE)); }
 
     // encabezado: datos de la ubicación elegida (sobrescribe el VLOOKUP en la copia)
     if (body.sedeId) {
@@ -396,7 +417,7 @@ function crearInspeccion(body) {
 
     var pdfUrl = exportarPdf(ss, tmp.getSheetId(), 'Reporte ' + ar);
 
-    return { ok:true, pdfUrl:pdfUrl, encabezado:enc };
+    return { ok:true, pdfUrl:pdfUrl, encabezado:enc, avisos:avisos };
   } catch (err) {
     return { ok:false, error:_msg(err) };
   } finally {
