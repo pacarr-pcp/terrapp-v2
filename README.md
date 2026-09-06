@@ -257,12 +257,15 @@ de viga/perfil son parte de la Fase 2.
   modal de resumen de colada, checkbox/marco identificada, etc.).
 
 ### Abierto
-1. **PDF — filas "ídem".** En las filas 2ª+ de cada colada, la numeración de
-   la columna N° y los conteos de la fila 6 (totales) no salen bien. Revisar
-   las fórmulas de la plantilla contra las filas que escribe el backend antes
-   de poner los `"`.
-2. **Corregir después del PDF.** Flujo para editar una inspección ya emitida y
-   volver a generar el PDF (y actualizar `Archivo2`).
+1. ✅ **PDF — filas "ídem" / conteos** (backend listo, falta probar en la hoja
+   real). El backend ahora escribe, por muestra:
+   - **col A** = `"RAM"-nn` (correlativo por muestra: `21148-01`, `-02`…)
+   - **col J** = últimos 4 de la col B (`0101`, `0102`, `0202`…) para que las
+     fórmulas `B6:F6` cuenten cuántas coladas hay de 1, 2, 3, 4 y 5 muestras
+   - **E8** = total de muestras del reporte
+   - Archivo2 recibe todo el rango **A..J**. Los `"` (ídem) siguen sólo en C..I.
+2. ✅ **Corregir antes del PDF** — resuelto con el modal de resumen + edición
+   por colada. (Editar *después* de emitido queda para Ver2 si hace falta.)
 3. **Pesos "calculados" (sin tabla).** El camino "Calculado*" tiene bugs por
    tipo: identificar bien el espesor según el perfil (viga = tabla por
    `tipo+alto`; perfil = otra posición) y manejar dimensiones incompletas

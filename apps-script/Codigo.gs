@@ -41,14 +41,16 @@ var CFG = {
   CARPETA_PDF_ID : '1rg6bS_xQY4Xd6SjHOMmGZbu9TN2Nr0kf',
 
   // --- Fila KEY (encabezado de la inspección) en la plantilla ---
-  // Deducida del bloque evioKey: fila 8 = [RAM, AR, OTE, Fecha, =A6, Inspector, ...]
+  // fila 8 = [RAM, AR, OTE, Fecha, nMuestras(E8), Inspector, ...]
   FILA_KEY : 8,
-  KEY_COLS : { ram:1, ar:2, ote:3, fecha:4, inspector:6 },   // 1=A, 2=B, ...
+  KEY_COLS : { ram:1, ar:2, ote:3, fecha:4, nMuestras:5, inspector:6 },   // 1=A. E8 = total de muestras
 
   // --- Muestras ---
-  FILA_MUESTRA_1 : 9,          // IngresaDatos numera con =CONCATENAR(FILA()-8;".-")
+  FILA_MUESTRA_1 : 9,
   MAX_MUESTRAS   : 33,         // filas 9..41 en la plantilla
-  MUESTRA_COLS   : { muestra:2, tipo:3, dimension:4, grado:5, colada:6, peso:7, cantidad:8, loteId:9 },
+  ANCHO_FILA     : 10,         // se escriben las columnas A..J
+  //  A = correlativo por muestra ("RAM"-01, -02…)   J = últimos 4 de B ("ídem": 0101, 0202…)
+  MUESTRA_COLS   : { correl:1, muestra:2, tipo:3, dimension:4, grado:5, colada:6, peso:7, cantidad:8, loteId:9, idem:10 },
 
   // --- Auto-muestreo por colada (kg) ---
   //   identificada:  1 muestra por 40 t, tope 5  (200 t)
@@ -281,8 +283,12 @@ function oteEliminar(body) {
 /**
  * body = {
  *   inspector, pin, ar, ote, ram, fecha, sedeId,
- *   muestras: [{ muestra, tipo, dimension, grado, colada, peso, cantidad, identificado }]
+ *   coladas: [{ pos, tipo, dimension, grado, colada, cantidad, peso, identificada }]
  * }
+ * El backend expande cada colada a N muestras (auto-muestreo) y escribe A..J:
+ *   A = "RAM"-nn (correlativo)   B = notación AAAA-PP-nnTT   C..I = datos
+ *   J = últimos 4 de B (para las fórmulas B6:F6 que cuentan "ídem")
+ * E8 = total de muestras. Archivo2 recibe todo el rango A..J.
  */
 function crearInspeccion(body) {
   var inspector = _auth(body);
@@ -298,26 +304,29 @@ function crearInspeccion(body) {
   if (!fecha)                 return { ok:false, error:'Fecha requerida' };
   if (coladas.length < 1)     return { ok:false, error:'Agregue al menos una colada' };
 
-  // --- expandir coladas -> filas de muestra con notación AAAA-PP-nnTT ---
+  // --- expandir coladas -> filas de muestra (columnas A..J) ---
   var mc = CFG.MUESTRA_COLS;
-  var colDesde = mc.muestra;                                  // B
-  var colHasta = mc.loteId;                                   // I
-  var ancho = colHasta - colDesde + 1;
-  var filas = [], dittoRel = [];                              // dittoRel: índices (0-based) de filas "ídem"
+  var ANCHO = CFG.ANCHO_FILA;                                 // 10 (A..J)
+  var prefA = ram || ar;                                      // prefijo de la col A
+  var filas = [], dittoRel = [], idx = 0;                     // dittoRel: filas "ídem" (0-based)
   for (var ci = 0; ci < coladas.length; ci++) {
     var c = coladas[ci];
     var pp = _pad2(c.pos != null ? c.pos : (ci + 1));
     var n  = _nMuestras(c.peso, c.identificada);
     for (var kk = 1; kk <= n; kk++) {
-      var r = new Array(ancho).fill('');
-      r[mc.muestra   - colDesde] = ar + '-' + pp + '-' + _pad2(kk) + _pad2(n);
-      r[mc.tipo      - colDesde] = c.tipo      || '';
-      r[mc.dimension - colDesde] = c.dimension || '';
-      r[mc.grado     - colDesde] = c.grado     || '';
-      r[mc.colada    - colDesde] = c.colada    || '';
-      r[mc.peso      - colDesde] = _num(c.peso);
-      r[mc.cantidad  - colDesde] = _num(c.cantidad);
-      r[mc.loteId    - colDesde] = c.identificada ? 'Si' : 'No Id.';
+      idx++;
+      var code = ar + '-' + pp + '-' + _pad2(kk) + _pad2(n);
+      var r = new Array(ANCHO).fill('');
+      r[mc.correl    - 1] = prefA + '-' + _pad2(idx);           // A: correlativo por muestra
+      r[mc.muestra   - 1] = code;                               // B: notación AAAA-PP-nnTT
+      r[mc.tipo      - 1] = c.tipo      || '';                  // C
+      r[mc.dimension - 1] = c.dimension || '';                  // D
+      r[mc.grado     - 1] = c.grado     || '';                  // E
+      r[mc.colada    - 1] = c.colada    || '';                  // F
+      r[mc.peso      - 1] = _num(c.peso);                       // G
+      r[mc.cantidad  - 1] = _num(c.cantidad);                   // H
+      r[mc.loteId    - 1] = c.identificada ? 'Si' : 'No Id.';   // I
+      r[mc.idem      - 1] = code.slice(-4);                     // J: últimos 4 de B ("ídem")
       filas.push(r);
       if (kk > 1) dittoRel.push(filas.length - 1);
     }
@@ -342,10 +351,11 @@ function crearInspeccion(body) {
     tmp.getRange(CFG.FILA_KEY, k.ar).setValue(ar);
     tmp.getRange(CFG.FILA_KEY, k.ote).setValue(ote);
     tmp.getRange(CFG.FILA_KEY, k.fecha).setValue(fecha);
+    tmp.getRange(CFG.FILA_KEY, k.nMuestras).setValue(filas.length);   // E8 = total de muestras
     tmp.getRange(CFG.FILA_KEY, k.inspector).setValue(inspector);
 
-    // muestras: valores REALES en todas las filas (así calculan las fórmulas)
-    tmp.getRange(CFG.FILA_MUESTRA_1, colDesde, filas.length, ancho).setValues(filas);
+    // muestras: valores REALES en todas las filas A..J (así calculan las fórmulas)
+    tmp.getRange(CFG.FILA_MUESTRA_1, 1, filas.length, ANCHO).setValues(filas);
 
     // encabezado: datos de la ubicación elegida (sobrescribe el VLOOKUP en la copia)
     if (body.sedeId) {
