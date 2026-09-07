@@ -4,8 +4,12 @@ Migración de la app de inspección en terreno (App Inventor + componente
 Spreadsheet) a **PWA + backend Apps Script**, manteniendo la misma Google
 Sheet, el mismo formato de reporte y `Archivo2`.
 
+**Ubicación del proyecto:** `C:\Users\pacar\proyectos\terrapp` (repo Git local).
+**PWA publicada:** https://pacarr-pcp.github.io/terrapp/ · repo GitHub Pages:
+`pacarr-pcp/terrapp` (se sube el contenido de `pwa/` a la raíz).
+
 ```
-terrapp-b2/
+terrapp/
 ├── apps-script/      backend (Web App)
 │   ├── Codigo.gs
 │   └── appsscript.json
