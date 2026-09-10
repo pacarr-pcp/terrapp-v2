@@ -419,8 +419,7 @@ function crearInspeccion(body) {
 
     var pdf = exportarPdf(ss, tmp.getSheetId(), 'Reporte ' + ar);
 
-    return { ok:true, pdfUrl:pdf.url, pdfB64:pdf.b64, pdfShared:pdf.shared,
-             encabezado:enc, avisos:avisos };
+    return { ok:true, pdfUrl:pdf.url, pdfShared:pdf.shared, encabezado:enc, avisos:avisos };
   } catch (err) {
     return { ok:false, error:_msg(err) };
   } finally {
@@ -429,8 +428,8 @@ function crearInspeccion(body) {
   }
 }
 
-/** Devuelve { url (Drive), b64 (bytes del PDF), shared (bool) }.
- *  El b64 permite abrir el PDF en la PWA aunque el dominio bloquee el enlace público. */
+/** Devuelve { url (enlace Drive), shared (bool) }. El enlace de Drive abre el PDF
+ *  en el visor de Google en línea (sin descarga) en Android e iOS. */
 function exportarPdf(ss, gid, nombre) {
   var base = ss.getUrl().replace(/\/edit.*$/, '');
   var url = base + '/export?exportFormat=pdf&format=pdf'
@@ -446,9 +445,8 @@ function exportarPdf(ss, gid, nombre) {
   if (resp.getResponseCode() !== 200) throw new Error('No se pudo exportar el PDF (HTTP ' + resp.getResponseCode() + ')');
 
   var blob = resp.getBlob().setName(nombre + '.pdf');
-  var b64  = Utilities.base64Encode(blob.getBytes());
 
-  var out = { url:'', b64:b64, shared:false };
+  var out = { url:'', shared:false };
   try {
     var file = DriveApp.getFolderById(CFG.CARPETA_PDF_ID).createFile(blob);
     out.url = file.getUrl();
@@ -512,6 +510,5 @@ function _test() {
         colada:'TEST-B', peso:'103431', cantidad:'9', identificada:true }   // -> 3 muestras (ídem en 2ª y 3ª)
     ]
   });
-  if (r.pdfB64) r.pdfB64 = '(' + r.pdfB64.length + ' chars base64)';   // no llenar el log
   Logger.log(JSON.stringify(r, null, 2));
 }
