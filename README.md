@@ -248,35 +248,31 @@ de viga/perfil son parte de la Fase 2.
 **App OTE** ya está integrada (sección Clientes). Kg+ portado a
 `data/pesos.json` + `pesoColada()`.
 
-## Pendientes (act. 2026-09-06, PWA v12)
+## Pendientes (act. 2026-09-09, PWA v17)
 
-### Hecho desde la última lista
+### Hecho
 - ✅ **Solicitante por separado** — `sedesDeOte` manda el nombre; el encabezado
   lista `solicitante · sede · comuna · empresa` con filtro por texto.
-- ✅ **Correlativo de coladas** — al pulsar PDF se exige 01…N (sin huecos,
-  repetidos ni desorden) → aviso "Revisar correlativo de coladas". Botón
-  "Ordenar" + "Col. ##" en fucsia cuando hay desorden.
-- ✅ Kg+ portado: `data/pesos.json` (14 tablas) + `pesoColada()`.
-- ✅ Ronda de cambios visuales (títulos, colores, layout del encabezado,
-  modal de resumen de colada, checkbox/marco identificada, etc.).
+- ✅ **Correlativo de coladas** — al pulsar PDF se exige 01…N → aviso
+  "Revisar correlativo de coladas". Botón "Ordenar" + "Col. ##" en fucsia.
+- ✅ **Kg+ portado** — `data/pesos.json` (14 tablas) + `pesoColada()` con
+  búsqueda tolerante al orden y fórmulas de respaldo (plegados, redondo…).
+- ✅ **PDF — col A / col J / E8** — por muestra el backend escribe col A =
+  `"RAM"-nn`, col J = últimos 4 de B (para las fórmulas `B6:F6`), E8 = total de
+  muestras. `Archivo2` recibe A..J. Los `"` (ídem) sólo en C..I.
+- ✅ **PDF en blanco** — la copia temporal nacía oculta (Plantilla oculta) y el
+  `/export` renderizaba vacío. Fix: `tmp.showSheet()` antes de exportar.
+- ✅ **Feedback al generar** — velo con spinner "Generando el reporte…".
+- ✅ Rondas de cambios visuales (títulos, colores, layout, modal de resumen,
+  checkbox/marco identificada, etc.).
 
 ### Abierto
-1. ✅ **PDF — filas "ídem" / conteos** (backend listo, falta probar en la hoja
-   real). El backend ahora escribe, por muestra:
-   - **col A** = `"RAM"-nn` (correlativo por muestra: `21148-01`, `-02`…)
-   - **col J** = últimos 4 de la col B (`0101`, `0102`, `0202`…) para que las
-     fórmulas `B6:F6` cuenten cuántas coladas hay de 1, 2, 3, 4 y 5 muestras
-   - **E8** = total de muestras del reporte
-   - Archivo2 recibe todo el rango **A..J**. Los `"` (ídem) siguen sólo en C..I.
-2. ✅ **Corregir antes del PDF** — resuelto con el modal de resumen + edición
-   por colada. (Editar *después* de emitido queda para Ver2 si hace falta.)
-3. **Pesos "calculados" (sin tabla).** El camino "Calculado*" tiene bugs por
-   tipo: identificar bien el espesor según el perfil (viga = tabla por
-   `tipo+alto`; perfil = otra posición) y manejar dimensiones incompletas
-   tipo `0x0x…`. Revisar tipo por tipo.
-4. **Fase 2 — Precio por espesor / EP.** Falta la tabla de precios (la prepara
+1. **Pesos "calculados" (sin tabla).** Revisar tipo por tipo: espesor por
+   perfil (viga = tabla por `tipo+alto`; perfil = otra posición) y dimensiones
+   incompletas tipo `0x0x…`.
+2. **Fase 2 — Precio por espesor / EP.** Falta la tabla de precios (la prepara
    PCP) → `data/precios.json` o hoja `Precios`. Cuñas ya puestas:
    `CFG.PRECIO`, `precioMuestra()`, `_espesor(tipo, dimension)`.
-5. **Repo por Git.** Hoy se sube por "Upload files". Para pasar a `git push`:
+3. **Repo por Git.** Hoy se sube por "Upload files". Para pasar a `git push`:
    mover `pwa/` a la raíz del repo, o renombrar `pwa` → `docs` y poner Pages
    en `/docs`.
