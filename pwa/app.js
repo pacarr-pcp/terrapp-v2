@@ -541,6 +541,7 @@ async function generar(){
     coladas:S.coladas
   });
   $('#btnGenerar').disabled = true;
+  showWorking('Generando el reporte…<br><small>puede tardar unos segundos</small>');
   try{
     if (!navigator.onLine) throw new Error('offline');
     const r = await call(payload);
@@ -553,8 +554,14 @@ async function generar(){
       $('#queuedMsg').textContent = 'Guardado en cola: se enviará al recuperar señal.';
       msg.className = 'msg ok'; msg.textContent = 'Inspección en cola ✓';
     } else { msg.textContent = e.message; }
-  }finally{ $('#btnGenerar').disabled = false; }
+  }finally{ hideWorking(); $('#btnGenerar').disabled = false; }
 }
+function showWorking(html){
+  const w = $('#working'); if (!w) return;
+  $('#workingMsg').innerHTML = html || 'Trabajando…';
+  w.hidden = false;
+}
+function hideWorking(){ const w = $('#working'); if (w) w.hidden = true; }
 function showResult(r){
   const e = r.encabezado || {};
   $('#resSol').textContent   = e.solicitante || '—';
