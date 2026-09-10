@@ -344,6 +344,7 @@ function crearInspeccion(body) {
 
     tmp = plantilla.copyTo(ss);
     tmp.setName('tmp_' + Utilities.getUuid().slice(0, 8));
+    tmp.showSheet();                     // si Plantilla está oculta, la copia también -> el PDF saldría en blanco
 
     var avisos = [];
 
@@ -416,9 +417,10 @@ function crearInspeccion(body) {
       SpreadsheetApp.flush();
     }
 
-    var pdfUrl = exportarPdf(ss, tmp.getSheetId(), 'Reporte ' + ar);
+    var pdf = exportarPdf(ss, tmp.getSheetId(), 'Reporte ' + ar);
 
-    return { ok:true, pdfUrl:pdfUrl, encabezado:enc, avisos:avisos };
+    return { ok:true, pdfUrl:pdf.url, pdfB64:pdf.b64, pdfShared:pdf.shared,
+             encabezado:enc, avisos:avisos };
   } catch (err) {
     return { ok:false, error:_msg(err) };
   } finally {
@@ -427,6 +429,8 @@ function crearInspeccion(body) {
   }
 }
 
+/** Devuelve { url (Drive), b64 (bytes del PDF), shared (bool) }.
+ *  El b64 permite abrir el PDF en la PWA aunque el dominio bloquee el enlace público. */
 function exportarPdf(ss, gid, nombre) {
   var base = ss.getUrl().replace(/\/edit.*$/, '');
   var url = base + '/export?exportFormat=pdf&format=pdf'
@@ -442,9 +446,16 @@ function exportarPdf(ss, gid, nombre) {
   if (resp.getResponseCode() !== 200) throw new Error('No se pudo exportar el PDF (HTTP ' + resp.getResponseCode() + ')');
 
   var blob = resp.getBlob().setName(nombre + '.pdf');
-  var file = DriveApp.getFolderById(CFG.CARPETA_PDF_ID).createFile(blob);
-  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) {}
-  return file.getUrl();
+  var b64  = Utilities.base64Encode(blob.getBytes());
+
+  var out = { url:'', b64:b64, shared:false };
+  try {
+    var file = DriveApp.getFolderById(CFG.CARPETA_PDF_ID).createFile(blob);
+    out.url = file.getUrl();
+    try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); out.shared = true; }
+    catch (e) {}
+  } catch (e2) {}
+  return out;
 }
 
 function archivar(ss, tmp, nMuestras) {
@@ -489,10 +500,11 @@ function backfillIdsListaOCP() {
   Logger.log('ids agregados: ' + n);
 }
 
-/** Prueba sin la PWA. Ajusta el PIN al real antes de correr. */
+/** Prueba sin la PWA. Toma el PIN real de la propiedad PINS (inspector PCP). */
 function _test() {
+  var pins = JSON.parse(PropertiesService.getScriptProperties().getProperty('PINS') || '{}');
   var r = crearInspeccion({
-    inspector:'PCP', pin:'0000', ar:'9999', ote:'216', ram:'99999', fecha:'05/09/2026', sedeId:'',
+    inspector:'PCP', pin:pins.PCP, ar:'9999', ote:'216', ram:'99999', fecha:'05/09/2026', sedeId:'',
     coladas:[
       { pos:'01', tipo:'Plancha', dimension:'50x2440x12000', grado:'A36',
         colada:'TEST-A', peso:'34477', cantidad:'3', identificada:true },   // -> 1 muestra
@@ -500,5 +512,6 @@ function _test() {
         colada:'TEST-B', peso:'103431', cantidad:'9', identificada:true }   // -> 3 muestras (ídem en 2ª y 3ª)
     ]
   });
+  if (r.pdfB64) r.pdfB64 = '(' + r.pdfB64.length + ' chars base64)';   // no llenar el log
   Logger.log(JSON.stringify(r, null, 2));
 }
