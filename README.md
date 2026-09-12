@@ -23,16 +23,16 @@ terrapp/
 
 ## 0. Antes que nada — rotar credenciales expuestas
 
-Los `.aia` de **TerrApp** y de **OTE** traen empaquetadas claves privadas de
+Los `.aia` de **TerrApp** y de **OTE** traían empaquetadas claves privadas de
 cuentas de servicio (`ocp1-482316-108b734f4ce3.json` en ambas y
-`bdsheet-ocp-68e54174d25a.json` en OTE). Cualquiera con un APK puede
-extraerlas. Tras migrar:
+`bdsheet-ocp-68e54174d25a.json` en OTE). Cualquiera con un APK podía
+extraerlas.
 
-1. Google Cloud Console → proyecto `ocp1-482316` → **IAM y administración →
-   Cuentas de servicio**.
-2. Para `pcpapp@ocp1-482316.iam.gserviceaccount.com` (y la de `bdsheet`):
-   pestaña **Claves** → borra las claves listadas.
-3. Revisa en **IAM** qué permisos tienen esas cuentas y quítalos si ya no se usan.
+**✅ Resuelto (2026-09-12):** ambas claves fueron eliminadas en Google Cloud
+Console (IAM y administración → Cuentas de servicio → pestaña Claves →
+borrar). `bdsheet-ocp-68e54174d25a` se borró en el proyecto `bdsheet-ocp`;
+`ocp1-482316-108b734f4ce3` vivía en otra cuenta de Google y se borró desde
+ahí. Ya no son válidas.
 
 El backend nuevo no usa cuentas de servicio: corre como
 `simet.pcp@usach.cl` con el token del propio script.
@@ -154,7 +154,7 @@ pantalla de inicio**.
 4. En Apps Script de la planilla: elimina/《desactiva》 los disparadores de
    `terr2PDF` y `copiar2` (Activadores → borrar). Puedes dejar las funciones
    como respaldo, pero sin trigger.
-5. Rota las credenciales (paso 0).
+5. ~~Rota las credenciales (paso 0).~~ Hecho.
 
 ---
 
@@ -248,9 +248,12 @@ de viga/perfil son parte de la Fase 2.
 **App OTE** ya está integrada (sección Clientes). Kg+ portado a
 `data/pesos.json` + `pesoColada()`.
 
-## Pendientes (act. 2026-09-09, PWA v17)
+## Pendientes (act. 2026-09-12, PWA v17)
 
 ### Hecho
+- ✅ **Rotación de credenciales** — las dos claves de cuenta de servicio
+  filtradas en los `.aia` viejos (`ocp1-482316-108b734f4ce3` y
+  `bdsheet-ocp-68e54174d25a`) fueron eliminadas en Google Cloud Console.
 - ✅ **Solicitante por separado** — `sedesDeOte` manda el nombre; el encabezado
   lista `solicitante · sede · comuna · empresa` con filtro por texto.
 - ✅ **Correlativo de coladas** — al pulsar PDF se exige 01…N → aviso
