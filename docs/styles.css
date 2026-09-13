@@ -101,7 +101,7 @@ body.ident-on #dlgSample{border:3px solid #16a34a}
 .ote-row{display:flex;gap:.5rem;align-items:flex-end}
 .ote-row label.ote{flex:1 1 0;min-width:0}
 .ote-row #btnBuscarOte{font-weight:700;flex:0 0 auto;
-  background:#b91c1c;color:#fff;border-color:#7f1d1d}
+  background:var(--card);color:#b91c1c;border-color:#b91c1c}
 #inAr,#inOte,#inRam{font-size:1rem;font-weight:700;color:#b91c1c;width:100%;min-width:0}
 .sedebox #sedeFiltro{align-self:flex-end;width:62%;font-size:.72rem;text-align:center;
   color:#374151;background:#fef08a;border-color:#eab308;min-height:36px;padding:.3rem .5rem}
