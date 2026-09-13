@@ -228,11 +228,20 @@ function pesoColada(tipo, dim, cant, grado){
       return t != null ? done(t*L*q,'tabla') : null;                  // blanco
     }
     case 'Cañería': {
-      if (s.length < 2) return null;
       if (g === 'A53' || g === 'A106'){
-        const t = lin(g === 'A106' ? 'caneria_a106' : 'caneria_a53', `${s[0]}s${s[1]}`);
-        return t != null ? done(t*L*q,'tabla') : null;               // tabla pobre → blanco
+        if (s.length >= 2){
+          const row = lin('caneria', `${s[0]}s${s[1]}`);
+          const r = row != null ? done(row.kg*L*q,'tabla') : null;
+          return r ? { ...r, e: row.e } : null;                      // tabla pobre → blanco
+        }
+        if (s.length === 1 && g === 'A53'){                          // serie std ("-" como schedule), sólo A53
+          const row = lin('caneria_std_a53', `${s[0]}`);
+          const r = row != null ? done(row.kg*L*q,'tabla') : null;
+          return r ? { ...r, e: row.e } : null;
+        }
+        return null;
       }
+      if (s.length < 2) return null;
       const de = s[0], di = s[1];                                     // Ø ext / Ø int (calculada)
       if (di == null || di >= de) return null;
       return done(Math.PI/4*(de*de - di*di) * L * q * DENS_L, 'anillo');

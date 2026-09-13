@@ -220,7 +220,11 @@ recalcular; si lo borra, vuelve).
   `peso = valor · largo_m · cantidad`, con `largo_m` = último número de
   *dimensiones* / 1000). Servido por Pages, cacheado offline por el SW.
   Claves: rectangular/canal/costanera `AxBxeE`; cuadrado `LADOxE`; ángulo
-  `ALAxE`; vigas UPN/IPE/IPN/HEA/HEB `ALTO`; WF `HxW`; cañería `DIAsSCH`.
+  `ALAxE`; vigas UPN/IPE/IPN/HEA/HEB `ALTO`; WF `HxW`; cañería `DIAsSCH`
+  (tabla `caneria`, unificada A-53/A-106 — API no está tabulado por falta de
+  producto; sin XXS por decisión de PCP). Serie de espesor fijo (9,52mm,
+  Sch "std") exclusiva de A53 → sólo diámetro sin schedule (`DIA`, tabla
+  `caneria_std_a53`); en A106 esa misma entrada (sin schedule) da blanco.
 - **Fórmula** (plancha, sin tabla): `e·A·L·7,85e-6` (mm).
 - El resolver está en `app.js`: `pesoColada(tipo, dimension, cantidad)` +
   el mapa `TABLA_TIPO`. Tipos aún sin tabla (Redondo, Pletina, Bobina,
