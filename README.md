@@ -37,6 +37,16 @@ ahí. Ya no son válidas.
 El backend nuevo no usa cuentas de servicio: corre como
 `simet.pcp@usach.cl` con el token del propio script.
 
+**✅ Además (2026-09-12):** en el proyecto `Simet00` (cuenta de servicio
+`pcpsimetapp@simet00.iam.gserviceaccount.com`, la que usa la app de origen
+para escribir los datos crudos en la Sheet) el Recomendador de IAM detectó
+que el rol **Editor** llevaba 90 días sin usar ninguno de sus ~12.000
+permisos — el acceso real a la Sheet es por "Compartir" del archivo, no por
+IAM del proyecto. Se aplicó la recomendación (se quitó el rol Editor) y se
+confirmó que la app de origen sigue escribiendo datos sin problema. Así, si
+esa clave se filtrara, ya no daría acceso de administrador a todo el
+proyecto GCP.
+
 ---
 
 ## 1. Preparar la planilla
