@@ -326,12 +326,22 @@ quedan como dos ideas separadas hasta que se decida si se fusionan.
   checkbox/marco identificada, etc.).
 
 ### Abierto
-1. **Pesos "calculados" (sin tabla).** Revisar tipo por tipo: espesor por
+1. **⚠️ Pendiente de PCP — probar Cañería en el navegador.** En la prueba
+   local (2026-09-13) el peso no se calculó para un caso de Cañería
+   (quedó en blanco). Falta reproducir el caso exacto (tipo/dimensión/
+   grado usados) y revisar `pesoColada()` case `'Cañería'` — probablemente
+   el formato de dimensión ingresado no calzó con `DIAMsSCH` o con el
+   schedule `-` de la serie std A53.
+2. **Pesos "calculados" (sin tabla).** Revisar tipo por tipo: espesor por
    perfil (viga = tabla por `tipo+alto`; perfil = otra posición) y dimensiones
    incompletas tipo `0x0x…`.
-2. **Fase 2 — Precio por espesor / EP.** Falta la tabla de precios (la prepara
+3. **Fase 2 — Precio por espesor / EP.** Falta la tabla de precios (la prepara
    PCP) → `data/precios.json` o hoja `Precios`. Cuñas ya puestas:
    `CFG.PRECIO`, `precioMuestra()`, `_espesor(tipo, dimension)`.
-3. **Repo por Git.** Hoy se sube por "Upload files". Para pasar a `git push`:
-   mover `pwa/` a la raíz del repo, o renombrar `pwa` → `docs` y poner Pages
-   en `/docs`.
+4. **GitHub Pages para V2.** El repo `pacarr-pcp/terrapp-v2` ya está al día
+   (push directo), pero todavía no tiene sitio publicado — hoy solo se
+   prueba local o con el zip.
+5. **Deployment de prueba del backend.** `Codigo.gs` en V2 tiene los cambios
+   de precio (H8) pero la Sheet real sigue corriendo la versión de V1;
+   falta armar un deployment de prueba separado para no tocar producción
+   al probar "Terminar y Pdf".
