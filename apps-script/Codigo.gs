@@ -41,9 +41,9 @@ var CFG = {
   CARPETA_PDF_ID : '1rg6bS_xQY4Xd6SjHOMmGZbu9TN2Nr0kf',
 
   // --- Fila KEY (encabezado de la inspección) en la plantilla ---
-  // fila 8 = [RAM, AR, OTE, Fecha, nMuestras(E8), Inspector, ...]
+  // fila 8 = [RAM, AR, OTE, Fecha, nMuestras(E8), Inspector, -, Precio(H8)]
   FILA_KEY : 8,
-  KEY_COLS : { ram:1, ar:2, ote:3, fecha:4, nMuestras:5, inspector:6 },   // 1=A. E8 = total de muestras
+  KEY_COLS : { ram:1, ar:2, ote:3, fecha:4, nMuestras:5, inspector:6, precio:8 },   // 1=A. E8 = total de muestras, H8 = precio UF (calculado en la PWA)
 
   // --- Muestras ---
   FILA_MUESTRA_1 : 9,
@@ -379,6 +379,13 @@ function crearInspeccion(body) {
     try {
       tmp.getRange(CFG.FILA_KEY, k.nMuestras).setValue(filas.length); // E8
     } catch (eE) { avisos.push('E8: ' + _msg(eE)); }
+    try {
+      // Precio del servicio (UF), calculado en la PWA (calcularPrecioUF). Fila 8 va oculta
+      // en la plantilla -> no aparece en el PDF, pero sí queda en Archivo2 (col H, A..J).
+      if (typeof body.precio === 'number' && isFinite(body.precio)) {
+        tmp.getRange(CFG.FILA_KEY, k.precio).setValue(body.precio);   // H8
+      }
+    } catch (eH) { avisos.push('H8 precio: ' + _msg(eH)); }
 
     // encabezado: datos de la ubicación elegida (sobrescribe el VLOOKUP en la copia)
     if (body.sedeId) {

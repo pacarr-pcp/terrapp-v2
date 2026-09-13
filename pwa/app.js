@@ -653,10 +653,11 @@ async function generar(){
     msg.textContent = 'Revisar correlativo de coladas';
     return;
   }
+  const precio = calcularPrecioUF(S.coladas);
   const payload = withAuth({
     accion:'crear',
     ar:S.header.ar, ote:S.header.ote, ram:S.header.ram, fecha:S.header.fecha, sedeId:S.header.sedeId,
-    coladas:S.coladas
+    coladas:S.coladas, precio: precio ? precio.total : null
   });
   $('#btnGenerar').disabled = true;
   showWorking('Generando el reporte…<br><small>puede tardar unos segundos</small>');
