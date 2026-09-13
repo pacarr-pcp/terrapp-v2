@@ -17,7 +17,7 @@ const S = {
   inspector:null, pin:null,
   header:{ ar:'', ote:'', ram:'', fecha:'', sedeId:'' },
   coladas:[], editIndex:-1,
-  cliEditId:null, pesoTouched:false, identTouched:false, std:false
+  cliEditId:null, pesoTouched:false, std:false
 };
 // n° de muestras por colada (espejo del backend)
 function nMuestras(kg, identificada){
@@ -41,15 +41,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const v = e.target.value.trim().replace(/\D/g,'');
     if (v) e.target.value = v.padStart(4,'0').slice(-4);
   });
-  $('#selTipo').addEventListener('change', () => { updateStdBtn(); recalcPeso(); recalcIdent(); });
-  $('#selGrado').addEventListener('change', () => { applyGradoColor(); recalcPeso(); recalcIdent(); });
-  $('#chkId').addEventListener('change', () => {
-    S.identTouched = true;
-    toggleIdLabel(); marcoIdent(); updateMuestrasPrev();
-  });
+  $('#selTipo').addEventListener('change', () => { updateStdBtn(); recalcPeso(); recalcCharpyNote(); });
+  $('#selGrado').addEventListener('change', () => { applyGradoColor(); recalcPeso(); recalcCharpyNote(); });
+  $('#chkId').addEventListener('change', () => { toggleIdLabel(); marcoIdent(); updateMuestrasPrev(); });
   $('#dlgSample').addEventListener('close', () => document.body.classList.remove('ident-on'));
   $('#btnStd').addEventListener('click', toggleStd);
-  $('#formSample').dimension.addEventListener('input', () => { recalcPeso(); recalcIdent(); });
+  $('#formSample').dimension.addEventListener('input', () => { recalcPeso(); recalcCharpyNote(); });
   $('#formSample').dimension.addEventListener('blur', stdCompleta);
   $('#formSample').cantidad.addEventListener('input', recalcPeso);
   $('#formSample').peso.addEventListener('input', () => {
@@ -259,11 +256,13 @@ function pesoColada(tipo, dim, cant, grado){
   }
 }
 
-// Excepciones de la serie WF(i) que NO se marcan identificada aunque cumplan >=8x21
+// Excepciones de la serie WF(i) que NO cuentan como Charpy aunque cumplan >=8x21
 const WF_I_EXCEP = ['10x22','12x26','14x22','14x30','16x26'];
 
-// -> true / false / null (null = no se puede determinar solo, queda manual)
-function esIdentificadaAuto(tipo, dim, grado){
+// ¿El lote requiere ensayo Charpy (e>=10mm según NCh203)? -> true / false / null (sin dato,
+// tipo no tabulado). NO tiene relación con el checkbox "Identificada" (ese es 20 vs 40 ton
+// de muestreo); esto es solo para el badge "CH" y la categoría de precio Básica/Charpy.
+function calcCharpy(tipo, dim, grado){
   const N = dimsNum(dim);
   if (!N.length) return null;
   const s = N.slice(0, -1);   // números de sección (sin el largo), salvo Plancha/Pletina
@@ -291,7 +290,7 @@ function esIdentificadaAuto(tipo, dim, grado){
       return null;                                             // no está en ninguna tabla
     }
     case 'Plancha': case 'Pletina':
-      return N.length >= 3 ? N[2] >= 10 : null;                 // AxBxE, e = N[2]
+      return N.length >= 3 ? N[0] >= 10 : null;                 // e x Ancho x Largo (e = N[0], igual que el botón Std)
     case 'Perfil rectangular': case 'Perfil canal': case 'Costanera':
       return s.length >= 3 ? s[2] >= 10 : null;                 // AxBxE
     case 'Perfil cuadrado':
@@ -309,15 +308,11 @@ function esIdentificadaAuto(tipo, dim, grado){
   }
 }
 
-function recalcIdent(){
-  const f = $('#formSample'), note = $('#identNote');
-  const setNote = t => { if (note) note.textContent = t; };
-  if (S.identTouched){ setNote(''); return; }
-  const r = esIdentificadaAuto(f.tipo.value, f.dimension.value, f.grado.value);
-  if (r == null){ setNote(''); return; }
-  f.identificado.checked = r;
-  toggleIdLabel(); marcoIdent(); updateMuestrasPrev();
-  setNote('auto: ' + (r ? 'e≥10mm' : 'e<10mm') + ' (editable)');
+// Solo informativo — no toca el checkbox "Identificada" (20/40 ton), que es independiente.
+function recalcCharpyNote(){
+  const f = $('#formSample'), note = $('#identNote'); if (!note) return;
+  const r = calcCharpy(f.tipo.value, f.dimension.value, f.grado.value);
+  note.textContent = r == null ? '' : (r ? 'Ⓒ requiere Charpy (e≥10mm)' : 'sin Charpy (e<10mm)');
 }
 
 function recalcPeso(){
@@ -513,12 +508,13 @@ function renderColadas(){
     const fuera = num(c.pos) < prevPos;
     prevPos = num(c.pos);
     const notacion = n>1 ? `${codes[0]} … ${codes[n-1]}` : codes[0];
+    const ch = calcCharpy(c.tipo, c.dimension, c.grado);
     const li = document.createElement('li');
     if (c.identificada) li.className = 'ident';
     li.innerHTML = `<div class="body" data-v="${i}">
         <b class="col-lbl${fuera?' fuera':''}">Col. ${esc(c.pos)}</b> · ${esc(c.tipo)}
         <span style="color:${gradoColor(c.grado)};font-weight:700"> ${esc(c.grado||'')}</span>
-        <span class="pill">${n} m</span>
+        <span class="pill">${n} m</span>${ch ? ' <span class="pill ch">CH</span>' : ''}
         <div class="meta">${esc(c.dimension||'')} · Colada ${esc(c.colada||'—')}
           · ${num(c.cantidad)} u · ${num(c.peso)} kg · ${c.identificada ? '✔ Identificada' : 'No Id.'}</div>
         <div class="meta">${esc(notacion)}</div>
@@ -546,9 +542,12 @@ function calcularPrecioUF(coladas){
   if (!PRECIOS || !coladas.length) return null;
   const P = PRECIOS, adic = num(P.muestraAdicional);
   const basicas = [], charpys = [];
+  let sinClasificar = 0;
   coladas.forEach(c => {
+    const ch = calcCharpy(c.tipo, c.dimension, c.grado);   // e>=10mm, NADA que ver con "Identificada"
+    if (ch == null){ sinClasificar++; return; }            // tipo manual (Viga I/H, Bobina...): no se puede tasar solo
     const n = nMuestras(c.peso, c.identificada);
-    (c.identificada ? charpys : basicas).push(n);
+    (ch ? charpys : basicas).push(n);
   });
 
   // Básica (e<10mm): descuento único y plano — el valor base baja si hay más de X lotes
@@ -565,7 +564,7 @@ function calcularPrecioUF(coladas){
 
   return {
     moneda: P.moneda || 'UF',
-    nBasica: nB, nCharpy: nC, factorCharpy: factor,
+    nBasica: nB, nCharpy: nC, factorCharpy: factor, sinClasificar,
     totalBasica: round(totalBasica), totalCharpy: round(totalCharpy),
     total: round(totalBasica + totalCharpy)
   };
@@ -577,7 +576,8 @@ function renderPrecio(){
   p.hidden = false;
   p.innerHTML = `Precio estimado: <b>${r.total} ${r.moneda}</b>` +
     ` (Básica ${r.nBasica} lotes = ${r.totalBasica} ${r.moneda} · ` +
-    `Charpy ${r.nCharpy} lotes${r.factorCharpy < 1 ? ' ×' + r.factorCharpy : ''} = ${r.totalCharpy} ${r.moneda})`;
+    `Charpy ${r.nCharpy} lotes${r.factorCharpy < 1 ? ' ×' + r.factorCharpy : ''} = ${r.totalCharpy} ${r.moneda})` +
+    (r.sinClasificar ? ` · <span class="hint fucsia">${r.sinClasificar} lote${r.sinClasificar>1?'s':''} sin clasificar (revisar a mano)</span>` : '');
 }
 
 function openVer(i){
@@ -592,7 +592,9 @@ function openVer(i){
     ['Colada (hornada)', esc(c.colada || '—')],
     ['Unidades', num(c.cantidad)],
     ['Peso', num(c.peso) + ' kg'],
-    ['Identificada', c.identificada ? '<span class="badge si">SÍ</span>' : '<span class="badge no">NO</span>']
+    ['Identificada', c.identificada ? '<span class="badge si">SÍ</span>' : '<span class="badge no">NO</span>'],
+    ['Charpy (e≥10mm)', (() => { const ch = calcCharpy(c.tipo, c.dimension, c.grado);
+      return ch == null ? '<span class="badge no">s/d</span>' : (ch ? '<span class="badge si">CH</span>' : '<span class="badge no">NO</span>'); })()]
   ].map(([k,v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
   $('#verEditar').onclick = () => { $('#dlgVer').close(); openColada(i); };
   $('#dlgVer').showModal();
@@ -613,11 +615,10 @@ function openColada(i){
   f.identificado.checked = !!c.identificada;
   S.std = false;
   S.pesoTouched = (i >= 0 && !!c.peso);     // en edición se respeta el peso guardado
-  S.identTouched = (i >= 0);                // en edición se respeta la marca guardada
   f.peso.classList.toggle('peso-calc', !S.pesoTouched);
   updateStdBtn(); aplicaEstiloStd(); applyGradoColor(); toggleIdLabel(); marcoIdent();
   if (!S.pesoTouched) recalcPeso();
-  if (!S.identTouched) recalcIdent();
+  recalcCharpyNote();
   updateMuestrasPrev();
   $('#dlgSample').showModal();
 }
