@@ -320,7 +320,14 @@ function recalcPeso(){
   const setNote = t => { if (note) note.textContent = t; };
   if (S.pesoTouched){ setNote(''); return; }
   const r = pesoColada(f.tipo.value, f.dimension.value, f.cantidad.value, f.grado.value);
-  if (!r){ f.peso.value = ''; f.peso.classList.remove('peso-calc'); setNote(''); updateMuestrasPrev(); return; }
+  if (!r){
+    f.peso.value = ''; f.peso.classList.remove('peso-calc');
+    const g = String(f.grado.value||'').toUpperCase();
+    setNote(f.tipo.value === 'Cañería' && g !== 'A53' && g !== 'A106' && f.dimension.value.trim()
+      ? 'para calcular por tabla, Grado debe ser A53 o A106 (ej. 12x80x6000); con otro grado se espera ØextxØintxLargo'
+      : '');
+    updateMuestrasPrev(); return;
+  }
   f.peso.value = Math.round(r.kg);
   f.peso.classList.add('peso-calc');
   setNote('≈ ' + r.via + ' (editable)');
