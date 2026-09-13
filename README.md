@@ -2,10 +2,8 @@
 
 > **Fork de desarrollo.** Nace el 2026-09-13 a partir de TerrApp B2 (V1),
 > que sigue en producción tal cual, sin tocar, en
-> `C:\Users\pacar\proyectos\terrapp`. Esta carpeta es un repo Git
-> independiente (mismo historial hasta el fork) todavía **no publicado**:
-> no tiene remoto de GitHub propio ni deploy propio. Mientras V2 no esté
-> lista y probada, la app en uso sigue siendo V1
+> `C:\Users\pacar\proyectos\terrapp`. Mientras V2 no esté lista y probada
+> a fondo, la app en uso sigue siendo V1
 > (https://pacarr-pcp.github.io/terrapp/) — nada de lo que se haga aquí la
 > afecta.
 
@@ -13,7 +11,10 @@ Migración de la app de inspección en terreno (App Inventor + componente
 Spreadsheet) a **PWA + backend Apps Script**, manteniendo la misma Google
 Sheet, el mismo formato de reporte y `Archivo2`.
 
-**Ubicación del proyecto:** `C:\Users\pacar\proyectos\terrapp-v2` (repo Git local, sin remoto aún).
+**Ubicación del proyecto:** `C:\Users\pacar\proyectos\terrapp-v2` (repo Git local).
+**V2 publicada:** https://pacarr-pcp.github.io/terrapp-v2/ · repo GitHub:
+`pacarr-pcp/terrapp-v2` (se publica por `git push` — GitHub Pages sirve
+la carpeta `docs/`, a diferencia de V1 que se sube a mano).
 **V1 (producción):** https://pacarr-pcp.github.io/terrapp/ · repo GitHub Pages:
 `pacarr-pcp/terrapp`.
 
@@ -22,7 +23,7 @@ terrapp-v2/
 ├── apps-script/      backend (Web App)
 │   ├── Codigo.gs
 │   └── appsscript.json
-├── pwa/              cliente (se sube a GitHub Pages)
+├── docs/              cliente (GitHub Pages sirve esta carpeta directo)
 │   ├── index.html  styles.css  app.js
 │   ├── manifest.webmanifest  sw.js  icon.svg
 └── README.md
@@ -124,10 +125,10 @@ sigue.
 
 ## 3. PWA
 
-1. En `pwa/app.js`, línea `BACKEND_URL`, pega la URL `/exec` del paso 2.6.
+1. En `docs/app.js`, línea `BACKEND_URL`, pega la URL `/exec` del paso 2.6.
 2. Prueba local:
    ```bash
-   cd pwa
+   cd docs
    python -m http.server 8080
    ```
    Abre `http://localhost:8080` y valida el flujo completo.
@@ -135,27 +136,23 @@ sigue.
 
 ### Publicar en GitHub Pages (gratis)
 
-Repo: **https://github.com/pacarr-pcp/terrapp** — la app quedará en
-**https://pacarr-pcp.github.io/terrapp/**
+Repo: **https://github.com/pacarr-pcp/terrapp-v2** — la app queda en
+**https://pacarr-pcp.github.io/terrapp-v2/**
 
-**Opción web (sin instalar nada):**
-1. Abre el repo → **Add file → Upload files**.
-2. Arrastra **todos los archivos que están dentro de `pwa/`**
-   (`index.html`, `app.js`, `styles.css`, `manifest.webmanifest`, `sw.js`,
-   `icon.svg`, `.nojekyll`) — que `index.html` quede en la raíz del repo.
-3. Escribe un mensaje ("PWA TerrApp B2") → **Commit changes**.
-4. **Settings → Pages → Source: Deploy from a branch → `main` / `/ (root)` →
-   Save.** En 1–2 min la URL responde.
+A diferencia de V1 (que sube por "Upload files" porque la PWA vivía en un
+subdirectorio `pwa/`), acá la carpeta que sirve la app se llama `docs/` —
+GitHub Pages la reconoce directo, así que basta con:
 
-**Opción git (desde tu PC):**
 ```bash
-git clone https://github.com/pacarr-pcp/terrapp.git
-# copia dentro los archivos de pwa/  (index.html en la raíz)
-cd terrapp
+cd terrapp-v2
 git add .
-git commit -m "PWA TerrApp B2"
+git commit -m "…"
 git push
 ```
+
+Configuración (una sola vez): **Settings → Pages → Source: Deploy from a
+branch → `main` / `/docs` → Save.** En 1–2 min la URL responde, y desde
+ahí cada `git push` a `main` actualiza el sitio solo.
 
 Luego, en el teléfono: abre la URL → menú del navegador → **Agregar a
 pantalla de inicio**.
@@ -225,7 +222,7 @@ de la colada se calcula solo. El campo *Peso colada (kg)* queda editable: se
 autocompleta y el inspector confirma o corrige (si lo escribe a mano, deja de
 recalcular; si lo borra, vuelve).
 
-- **Tablas** → `pwa/data/pesos.json` (14 tablas de Kg+, valor = **kg/m**;
+- **Tablas** → `docs/data/pesos.json` (14 tablas de Kg+, valor = **kg/m**;
   `peso = valor · largo_m · cantidad`, con `largo_m` = último número de
   *dimensiones* / 1000). Servido por Pages, cacheado offline por el SW.
   Claves: rectangular/canal/costanera `AxBxeE`; cuadrado `LADOxE`; ángulo
@@ -283,7 +280,7 @@ Charpy aplica un descuento escalado (multiplica el subtotal) según rangos
 de cantidad de lotes. Los lotes de tipo no clasificable (Viga I/H, Viga
 canal, Bobina, Perfil Especial, Otro) se excluyen del cálculo y se avisan
 aparte ("N lotes sin clasificar, revisar a mano"). Todos los valores
-(bases, umbrales, factores) están en `pwa/data/precios.json` — **ajustables
+(bases, umbrales, factores) están en `docs/data/precios.json` — **ajustables
 sin tocar `app.js`** porque Pablo espera que cambien con el tiempo.
 `calcularPrecioUF()` calcula el total y `renderPrecio()` lo muestra en la
 pantalla de Coladas. El total se manda al backend en el payload y
