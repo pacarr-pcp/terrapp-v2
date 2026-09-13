@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#3F51B5">
-<title>TerrApp — Inspección en terreno</title>
+<title>TerrApp2 — Inspección en terreno</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
@@ -13,7 +13,7 @@
 <body>
 
 <header class="topbar">
-  <span class="brand">SIMET · TerrApp</span>
+  <span class="brand">SIMET · TerrApp2</span>
   <span id="who" class="who" hidden></span>
   <button id="btnSalir" class="link" hidden>Salir</button>
 </header>
@@ -111,15 +111,15 @@
 
   <!-- ───────── CLIENTES (OTE) ───────── -->
   <section id="viewClientes" class="view" hidden>
-    <h1>Clientes / OTE</h1>
+    <div class="head-row">
+      <h1>Clientes / OTE</h1>
+      <button id="btnBackMenu2" class="link">‹ Menú</button>
+    </div>
     <label>Buscar
       <input id="cliQ" type="search" placeholder="OTE, empresa, comuna, sede…">
     </label>
     <button id="btnCliNueva" class="secondary">+ Nueva ubicación</button>
     <ul id="cliList" class="samples"></ul>
-    <div class="actions">
-      <button id="btnBackMenu2" class="link">‹ Menú</button>
-    </div>
     <p id="cliMsg" class="msg" role="alert"></p>
   </section>
 
@@ -139,9 +139,6 @@
         <input name="identificado" type="checkbox" id="chkId"> Identificada
       </label>
     </div>
-    <label class="check" id="charpyManualLabel" hidden>
-      <input name="charpyManual" type="checkbox" id="chkCharpyManual"> ¿Lleva Charpy? (declarar a mano)
-    </label>
 
     <label>Tipo
       <span class="tiporow">
@@ -150,10 +147,15 @@
       </span>
     </label>
 
-    <label>Dimensiones
-      <input name="dimension" placeholder="AxBxC">
-      <small id="dimHint"></small>
-    </label>
+    <div class="half">
+      <label class="dim-half">Dimensiones
+        <input name="dimension" placeholder="AxBxC">
+        <small id="dimHint"></small>
+      </label>
+      <label class="check charpy" id="charpyManualLabel" hidden>
+        <input name="charpyManual" type="checkbox" id="chkCharpyManual"> con charpy
+      </label>
+    </div>
     <small id="identNote" class="hint"></small>
 
     <label>Grado
