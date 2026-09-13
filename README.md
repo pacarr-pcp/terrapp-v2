@@ -1,15 +1,24 @@
-# TerrApp B2
+# TerrApp V2
+
+> **Fork de desarrollo.** Nace el 2026-09-13 a partir de TerrApp B2 (V1),
+> que sigue en producción tal cual, sin tocar, en
+> `C:\Users\pacar\proyectos\terrapp`. Esta carpeta es un repo Git
+> independiente (mismo historial hasta el fork) todavía **no publicado**:
+> no tiene remoto de GitHub propio ni deploy propio. Mientras V2 no esté
+> lista y probada, la app en uso sigue siendo V1
+> (https://pacarr-pcp.github.io/terrapp/) — nada de lo que se haga aquí la
+> afecta.
 
 Migración de la app de inspección en terreno (App Inventor + componente
 Spreadsheet) a **PWA + backend Apps Script**, manteniendo la misma Google
 Sheet, el mismo formato de reporte y `Archivo2`.
 
-**Ubicación del proyecto:** `C:\Users\pacar\proyectos\terrapp` (repo Git local).
-**PWA publicada:** https://pacarr-pcp.github.io/terrapp/ · repo GitHub Pages:
-`pacarr-pcp/terrapp` (se sube el contenido de `pwa/` a la raíz).
+**Ubicación del proyecto:** `C:\Users\pacar\proyectos\terrapp-v2` (repo Git local, sin remoto aún).
+**V1 (producción):** https://pacarr-pcp.github.io/terrapp/ · repo GitHub Pages:
+`pacarr-pcp/terrapp`.
 
 ```
-terrapp/
+terrapp-v2/
 ├── apps-script/      backend (Web App)
 │   ├── Codigo.gs
 │   └── appsscript.json
