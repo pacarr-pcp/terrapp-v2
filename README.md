@@ -278,9 +278,12 @@ nunca toca `chkId`.)
 
 **Precio del servicio (UF), por lotes con descuento por volumen.** Cada
 colada cae en dos categorías según `calcCharpy` (no según "Identificada"):
-**Básica** (sin Charpy) o **Charpy**. Precio por lote = valor base + 1 UF
-por cada muestra adicional del lote (la cantidad de muestras sí usa
-`identificada` vía `nMuestras()`, porque eso es aparte). Básica aplica un
+**Básica** (sin Charpy) o **Charpy**. Precio por lote = valor base + (valor
+por muestra adicional del lote) — **base y muestra adicional son
+independientes para Básica y para Charpy** (`basica.muestraAdicional` /
+`charpy.muestraAdicional` en `precios.json`, hoy ambos en 1 UF pero pueden
+cambiar por separado). La cantidad de muestras sí usa `identificada` vía
+`nMuestras()`, porque eso es aparte. Básica aplica un
 descuento único y plano (el valor base baja) si hay más de X lotes;
 Charpy aplica un descuento escalado (multiplica el subtotal) según rangos
 de cantidad de lotes. Los lotes de tipo manual (Viga I/H, Viga canal,

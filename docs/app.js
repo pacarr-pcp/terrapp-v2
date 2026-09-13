@@ -572,7 +572,7 @@ function renderColadas(){
 // Parámetros ajustables en data/precios.json — nada de esto va hardcodeado.
 function calcularPrecioUF(coladas){
   if (!PRECIOS || !coladas.length) return null;
-  const P = PRECIOS, adic = num(P.muestraAdicional);
+  const P = PRECIOS;
   const basicas = [], charpys = [];
   let sinClasificar = 0;
   coladas.forEach(c => {
@@ -584,14 +584,16 @@ function calcularPrecioUF(coladas){
 
   // Básica (e<10mm): descuento único y plano — el valor base baja si hay más de X lotes
   const nB = basicas.length;
+  const adicB = num(P.basica.muestraAdicional);
   const baseB = nB >= P.basica.descuento.lotesMin ? P.basica.descuento.baseConDescuento : P.basica.base;
-  const totalBasica = basicas.reduce((acc,n) => acc + baseB + (n-1)*adic, 0);
+  const totalBasica = basicas.reduce((acc,n) => acc + baseB + (n-1)*adicB, 0);
 
   // Charpy (e>=10mm): descuento escalado — multiplica el subtotal según cuántos lotes hay
   const nC = charpys.length;
+  const adicC = num(P.charpy.muestraAdicional);
   const tier = P.charpy.descuentos.find(d => nC >= d.lotesMin && (d.lotesMax == null || nC <= d.lotesMax));
   const factor = tier ? tier.factor : 1;
-  const subtotalCharpy = charpys.reduce((acc,n) => acc + P.charpy.base + (n-1)*adic, 0);
+  const subtotalCharpy = charpys.reduce((acc,n) => acc + P.charpy.base + (n-1)*adicC, 0);
   const totalCharpy = subtotalCharpy * factor;
 
   return {
