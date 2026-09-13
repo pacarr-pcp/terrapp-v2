@@ -1,0 +1,18 @@
+{
+ "_nota": "Parametros del calculo de precio del servicio (Fase 2). Editables sin tocar app.js.",
+ "moneda": "UF",
+ "muestraAdicional": 1,
+ "basica": {
+  "_nota": "lotes con e<10mm",
+  "base": 5.55,
+  "descuento": { "lotesMin": 11, "baseConDescuento": 5 }
+ },
+ "charpy": {
+  "_nota": "lotes con e>=10mm (requieren ensayo Charpy)",
+  "base": 8,
+  "descuentos": [
+   { "lotesMin": 11, "lotesMax": 20, "factor": 0.9 },
+   { "lotesMin": 21, "lotesMax": null, "factor": 0.85 }
+  ]
+ }
+}

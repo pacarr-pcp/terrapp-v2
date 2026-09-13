@@ -7,8 +7,8 @@
 const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbw3snjl4xousmjRGj9Fvwg2U1zXL-Exnhxam7TIrxRscW75fbf3FC77ooRyZyV-U3TxmA/exec';
 
 const TIPOS = ['Perfil cuadrado','Perfil rectangular','Perfil canal','Plancha','Angulo plegado',
-  'Angulo laminado','Viga UPN','Viga IPE','Viga IPN','Viga HEA','Viga HEB','Viga WF','Viga I',
-  'Viga H','Cañería','Redondo','Costanera','Pletina','Bobina','Perfil Especial','Otro'];
+  'Angulo laminado','Viga UPN','Viga canal','Viga IPE','Viga IPN','Viga HEA','Viga HEB','Viga WF',
+  'Viga I','Viga H','Cañería','Redondo','Costanera','Pletina','Bobina','Perfil Especial','Otro'];
 const GRADOS = ['SAE1020','S275jr','A36','A572','A653','A992','A242','A588','A502','A709','A792',
   'A913','270ES','345ES','A53','A106','Q355','Q235','otro'];
 
@@ -17,7 +17,7 @@ const S = {
   inspector:null, pin:null,
   header:{ ar:'', ote:'', ram:'', fecha:'', sedeId:'' },
   coladas:[], editIndex:-1,
-  cliEditId:null, pesoTouched:false, std:false
+  cliEditId:null, pesoTouched:false, identTouched:false, std:false
 };
 // n° de muestras por colada (espejo del backend)
 function nMuestras(kg, identificada){
@@ -35,17 +35,21 @@ function show(id){ VIEWS.forEach(v => $('#'+v).hidden = (v!==id)); window.scroll
 document.addEventListener('DOMContentLoaded', () => {
   initSelects();
   fetch('data/pesos.json').then(r => r.json()).then(d => { PESOS = d; }).catch(()=>{});
+  fetch('data/precios.json').then(r => r.json()).then(d => { PRECIOS = d; }).catch(()=>{});
   $('#inFecha').value = todayISO();
   $('#inAr').addEventListener('blur', e => {
     const v = e.target.value.trim().replace(/\D/g,'');
     if (v) e.target.value = v.padStart(4,'0').slice(-4);
   });
-  $('#selTipo').addEventListener('change', () => { updateStdBtn(); recalcPeso(); });
-  $('#selGrado').addEventListener('change', applyGradoColor);
-  $('#chkId').addEventListener('change', () => { toggleIdLabel(); marcoIdent(); updateMuestrasPrev(); });
+  $('#selTipo').addEventListener('change', () => { updateStdBtn(); recalcPeso(); recalcIdent(); });
+  $('#selGrado').addEventListener('change', () => { applyGradoColor(); recalcPeso(); recalcIdent(); });
+  $('#chkId').addEventListener('change', () => {
+    S.identTouched = true;
+    toggleIdLabel(); marcoIdent(); updateMuestrasPrev();
+  });
   $('#dlgSample').addEventListener('close', () => document.body.classList.remove('ident-on'));
   $('#btnStd').addEventListener('click', toggleStd);
-  $('#formSample').dimension.addEventListener('input', recalcPeso);
+  $('#formSample').dimension.addEventListener('input', () => { recalcPeso(); recalcIdent(); });
   $('#formSample').dimension.addEventListener('blur', stdCompleta);
   $('#formSample').cantidad.addEventListener('input', recalcPeso);
   $('#formSample').peso.addEventListener('input', () => {
@@ -148,6 +152,7 @@ function stdCompleta(){
 
 // Tablas de peso (Kg+ portado). Se cargan de data/pesos.json al inicio.
 let PESOS = null;
+let PRECIOS = null;    // parámetros de precio (Fase 2). Se cargan de data/precios.json.
 const DENS = 7.85e-6;   // kg/mm³ (acero)
 
 const DENS_L = 7.85e-3;   // kg por (mm²·m) para perfiles lineales. Kg+ usaba 7,5; 7,85 calza con las tablas.
@@ -252,6 +257,67 @@ function pesoColada(tipo, dim, cant, grado){
     default:
       return null;   // Bobina, Perfil Especial, Otro → manual
   }
+}
+
+// Excepciones de la serie WF(i) que NO se marcan identificada aunque cumplan >=8x21
+const WF_I_EXCEP = ['10x22','12x26','14x22','14x30','16x26'];
+
+// -> true / false / null (null = no se puede determinar solo, queda manual)
+function esIdentificadaAuto(tipo, dim, grado){
+  const N = dimsNum(dim);
+  if (!N.length) return null;
+  const s = N.slice(0, -1);   // números de sección (sin el largo), salvo Plancha/Pletina
+  switch (tipo){
+    case 'Redondo':
+      return s.length >= 1 ? s[0] > 15 : null;                 // sobre 15mm de diámetro
+    case 'Viga UPN':
+      return s.length >= 1 ? s[0] >= 220 : null;
+    case 'Viga HEA':
+      return s.length >= 1 ? s[0] >= 200 : null;
+    case 'Viga HEB':
+      return true;                                             // todas
+    case 'Viga IPE':
+      return s.length >= 1 ? s[0] >= 270 : null;
+    case 'Viga IPN':
+      return s.length >= 1 ? s[0] >= 220 : null;
+    case 'Viga WF': {
+      if (s.length < 2) return null;
+      const [h,w] = s, key = `${h}x${w}`;
+      const T = (PESOS && PESOS.lineales) || {};
+      if (T.wf_i && T.wf_i[key.toLowerCase()] != null)
+        return WF_I_EXCEP.includes(key) ? false : (h >= 8 && w >= 21);
+      if (T.wf_h && T.wf_h[key.toLowerCase()] != null)
+        return h >= 6 && w >= 25;
+      return null;                                             // no está en ninguna tabla
+    }
+    case 'Plancha': case 'Pletina':
+      return N.length >= 3 ? N[2] >= 10 : null;                 // AxBxE, e = N[2]
+    case 'Perfil rectangular': case 'Perfil canal': case 'Costanera':
+      return s.length >= 3 ? s[2] >= 10 : null;                 // AxBxE
+    case 'Perfil cuadrado':
+      return s.length >= 2 ? s[1] >= 10 : null;                 // LADOxE
+    case 'Angulo laminado':
+      return s.length >= 2 ? s[1] >= 10 : null;                 // ALAxE
+    case 'Angulo plegado':
+      return s.length >= 1 ? s[s.length-1] >= 10 : null;
+    case 'Cañería': {
+      const r = pesoColada(tipo, dim, 1, grado);                // reutiliza la tabla para obtener 'e'
+      return r && r.e != null ? r.e >= 10 : null;
+    }
+    default:
+      return null;   // Viga canal, Viga I, Viga H, Bobina, Perfil Especial, Otro → manual
+  }
+}
+
+function recalcIdent(){
+  const f = $('#formSample'), note = $('#identNote');
+  const setNote = t => { if (note) note.textContent = t; };
+  if (S.identTouched){ setNote(''); return; }
+  const r = esIdentificadaAuto(f.tipo.value, f.dimension.value, f.grado.value);
+  if (r == null){ setNote(''); return; }
+  f.identificado.checked = r;
+  toggleIdLabel(); marcoIdent(); updateMuestrasPrev();
+  setNote('auto: ' + (r ? 'e≥10mm' : 'e<10mm') + ' (editable)');
 }
 
 function recalcPeso(){
@@ -471,6 +537,47 @@ function renderColadas(){
   $('#totKg').textContent = round(totKg / 1000);   // Ton
   $('#totU').textContent  = totU;
   $('#btnOrdenar').hidden = !coladasDesordenadas();
+  renderPrecio();
+}
+
+// ==== precio del servicio (Fase 2) ====
+// Parámetros ajustables en data/precios.json — nada de esto va hardcodeado.
+function calcularPrecioUF(coladas){
+  if (!PRECIOS || !coladas.length) return null;
+  const P = PRECIOS, adic = num(P.muestraAdicional);
+  const basicas = [], charpys = [];
+  coladas.forEach(c => {
+    const n = nMuestras(c.peso, c.identificada);
+    (c.identificada ? charpys : basicas).push(n);
+  });
+
+  // Básica (e<10mm): descuento único y plano — el valor base baja si hay más de X lotes
+  const nB = basicas.length;
+  const baseB = nB >= P.basica.descuento.lotesMin ? P.basica.descuento.baseConDescuento : P.basica.base;
+  const totalBasica = basicas.reduce((acc,n) => acc + baseB + (n-1)*adic, 0);
+
+  // Charpy (e>=10mm): descuento escalado — multiplica el subtotal según cuántos lotes hay
+  const nC = charpys.length;
+  const tier = P.charpy.descuentos.find(d => nC >= d.lotesMin && (d.lotesMax == null || nC <= d.lotesMax));
+  const factor = tier ? tier.factor : 1;
+  const subtotalCharpy = charpys.reduce((acc,n) => acc + P.charpy.base + (n-1)*adic, 0);
+  const totalCharpy = subtotalCharpy * factor;
+
+  return {
+    moneda: P.moneda || 'UF',
+    nBasica: nB, nCharpy: nC, factorCharpy: factor,
+    totalBasica: round(totalBasica), totalCharpy: round(totalCharpy),
+    total: round(totalBasica + totalCharpy)
+  };
+}
+function renderPrecio(){
+  const p = $('#precioInfo'); if (!p) return;
+  const r = calcularPrecioUF(S.coladas);
+  if (!r){ p.hidden = true; return; }
+  p.hidden = false;
+  p.innerHTML = `Precio estimado: <b>${r.total} ${r.moneda}</b>` +
+    ` (Básica ${r.nBasica} lotes = ${r.totalBasica} ${r.moneda} · ` +
+    `Charpy ${r.nCharpy} lotes${r.factorCharpy < 1 ? ' ×' + r.factorCharpy : ''} = ${r.totalCharpy} ${r.moneda})`;
 }
 
 function openVer(i){
@@ -505,10 +612,12 @@ function openColada(i){
   f.peso.value      = c.peso || '';
   f.identificado.checked = !!c.identificada;
   S.std = false;
-  S.pesoTouched = (i >= 0 && !!c.peso);   // en edición se respeta el peso guardado
+  S.pesoTouched = (i >= 0 && !!c.peso);     // en edición se respeta el peso guardado
+  S.identTouched = (i >= 0);                // en edición se respeta la marca guardada
   f.peso.classList.toggle('peso-calc', !S.pesoTouched);
   updateStdBtn(); aplicaEstiloStd(); applyGradoColor(); toggleIdLabel(); marcoIdent();
   if (!S.pesoTouched) recalcPeso();
+  if (!S.identTouched) recalcIdent();
   updateMuestrasPrev();
   $('#dlgSample').showModal();
 }

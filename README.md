@@ -251,21 +251,39 @@ en `dimensiones`:
 
 `_espesor(tipo, dimension)` en el backend hoy sólo resuelve plancha; las tablas
 de viga/perfil son parte de la Fase 2.
-- Datos → `pwa/data/precios.json` **o** una hoja `Precios` en la planilla:
-  ```json
-  {
-    "version": "",
-    "moneda": "CLP",
-    "base": "kg",                      // kg | unidad | m2  — a definir con la tabla
-    "porEspesor": {
-      "A36":  { "6": 0, "8": 0, "10": 0, "12.5": 0 },
-      "A572": { "6": 0, "8": 0 }
-    }
-  }
-  ```
+
+**Identificación automática (e≥10mm).** `esIdentificadaAuto(tipo, dimension, grado)`
+en `app.js` reemplaza el tilde manual de "Identificada" por uno automático,
+según las reglas de NCh203: Redondo >15mm Ø; UPN/IPN ≥220; HEA ≥200; HEB
+todas; IPE ≥270; WF(h) ≥6x25; WF(i) ≥8x21 (excepto 10x22, 12x26, 14x22,
+14x30, 16x26); el resto de perfiles (Plancha, Pletina, rectangular,
+cuadrado, canal, costanera, ángulo, Cañería) usa el espesor `e≥10mm`
+directamente de la dimensión o de la tabla `caneria`. `Viga I`/`Viga H`
+(normas extranjeras), `Viga canal` (UPN no tabulado), Bobina, Perfil
+Especial y Otro quedan **manuales** (la función devuelve `null` y no toca
+el checkbox). El inspector siempre puede sobrescribir el auto-marcado — una
+vez que lo toca a mano (`S.identTouched`), deja de recalcularse solo para
+esa colada, igual que ya pasaba con el peso.
+
+**Precio del servicio (UF), por lotes con descuento por volumen.** Cada
+colada cae en dos categorías según `identificada`: **Básica** (e<10mm) o
+**Charpy** (e≥10mm, requiere ensayo de impacto). Precio por lote = valor
+base + 1 UF por cada muestra adicional del lote. Básica aplica un
+descuento único y plano (el valor base baja) si hay más de X lotes;
+Charpy aplica un descuento escalado (multiplica el subtotal) según rangos
+de cantidad de lotes. Todos los valores (bases, umbrales, factores) están
+en `pwa/data/precios.json` — **ajustables sin tocar `app.js`** porque
+Pablo espera que cambien con el tiempo. `calcularPrecioUF()` calcula el
+total y `renderPrecio()` lo muestra en la pantalla de Coladas.
+Ojo: esto es un cálculo del **servicio de inspección** (por lote/muestra),
+distinto del stub de abajo (precio del **material** por espesor/kg) —
+quedan como dos ideas separadas hasta que se decida si se fusionan.
+
 - Backend: `CFG.PRECIO` (`activo:false` hoy) + `precioMuestra(dimension, grado)`
-  (stub que devuelve `null`). Al activarlo y definir `CFG.PRECIO.COL_PRECIO`,
-  `crearInspeccion` llena la columna de precio por fila y un total.
+  (stub que devuelve `null`, para un futuro precio de material por espesor/kg,
+  no confundir con `precios.json` de arriba). Al activarlo y definir
+  `CFG.PRECIO.COL_PRECIO`, `crearInspeccion` llena la columna de precio por
+  fila y un total.
 - Salida: columna Precio en `Archivo2` + reporte valorizado / EP (export aparte).
 
 **App OTE** ya está integrada (sección Clientes). Kg+ portado a
