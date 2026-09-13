@@ -255,11 +255,17 @@ según NCh203: Redondo >15mm Ø; UPN/IPN ≥220; HEA ≥200; HEB todas; IPE
 ≥270; WF(h) ≥6x25; WF(i) ≥8x21 (excepto 10x22, 12x26, 14x22, 14x30,
 16x26); el resto de perfiles (Plancha, Pletina, rectangular, cuadrado,
 canal, costanera, ángulo, Cañería) usa el espesor `e≥10mm` directamente de
-la dimensión o de la tabla `caneria`. `Viga I`/`Viga H` (normas
+la dimensión o de la tabla `caneria`. Se muestra como badge morado **"CH"**
+junto a cada colada en la lista y en el detalle "Ver".
+
+**Charpy manual para tipos sin tabla.** `Viga I`/`Viga H` (normas
 extranjeras), `Viga canal` (UPN no tabulado), Bobina, Perfil Especial y
-Otro quedan sin clasificar (`null`, requieren revisión manual). Se muestra
-como badge morado **"CH"** junto a cada colada en la lista y en el
-detalle "Ver".
+Otro (`TIPOS_CHARPY_MANUAL` en `app.js`) no se pueden clasificar solos —
+para esos tipos aparece un segundo checkbox **"¿Lleva Charpy? (declarar a
+mano)"** debajo de "Identificada" (oculto para el resto de los tipos, que
+se calculan solos). `charpyDeColada(c)` resuelve cuál de las dos fuentes
+usar (calculado vs. declarado) y alimenta tanto el badge "CH" como el
+precio.
 
 ⚠️ **Importante: esto NO tiene relación con el checkbox "Identificada".**
 Ese checkbox es independiente y solo decide si el lote se muestrea cada 20
@@ -277,9 +283,10 @@ por cada muestra adicional del lote (la cantidad de muestras sí usa
 `identificada` vía `nMuestras()`, porque eso es aparte). Básica aplica un
 descuento único y plano (el valor base baja) si hay más de X lotes;
 Charpy aplica un descuento escalado (multiplica el subtotal) según rangos
-de cantidad de lotes. Los lotes de tipo no clasificable (Viga I/H, Viga
-canal, Bobina, Perfil Especial, Otro) se excluyen del cálculo y se avisan
-aparte ("N lotes sin clasificar, revisar a mano"). Todos los valores
+de cantidad de lotes. Los lotes de tipo manual (Viga I/H, Viga canal,
+Bobina, Perfil Especial, Otro) que aún no declararon el checkbox de Charpy
+se excluyen del cálculo y se avisan aparte ("N lotes sin clasificar,
+revisar a mano"). Todos los valores
 (bases, umbrales, factores) están en `docs/data/precios.json` — **ajustables
 sin tocar `app.js`** porque Pablo espera que cambien con el tiempo.
 `calcularPrecioUF()` calcula el total y `renderPrecio()` lo muestra en la
@@ -328,22 +335,23 @@ quedan como dos ideas separadas hasta que se decida si se fusionan.
   con Grado A53/A106; con otro grado se espera Øext x Øint x Largo. Se
   agregó un aviso en pantalla explicando la causa cuando el peso queda en
   blanco.
+- ✅ **Grado filtrado por Tipo** — A53/A106 (normas de cañería, no un grado
+  de acero) sólo aparecen elegibles en el selector "Grado" cuando Tipo =
+  Cañería; para el resto de los tipos se ocultan.
+- ✅ **Charpy manual para tipos sin tabla** — Viga I/H, Viga canal, Bobina,
+  Perfil Especial y Otro ahora declaran el Charpy a mano con un checkbox
+  propio, en vez de quedar sin clasificar por defecto.
+- ✅ **Orden del selector Tipo** — "Viga canal" se movió después de "Viga H"
+  (antes quedaba entre UPN e IPE, fuera de lugar).
 
 ### Abierto
 1. **Pesos "calculados" (sin tabla).** Revisar tipo por tipo: espesor por
    perfil (viga = tabla por `tipo+alto`; perfil = otra posición) y dimensiones
    incompletas tipo `0x0x…`.
-3. **Fase 2 — Precio por espesor / EP.** Falta la tabla de precios (la prepara
+2. **Fase 2 — Precio por espesor / EP.** Falta la tabla de precios (la prepara
    PCP) → `data/precios.json` o hoja `Precios`. Cuñas ya puestas:
    `CFG.PRECIO`, `precioMuestra()`, `_espesor(tipo, dimension)`.
-4. **Deployment de prueba del backend.** `Codigo.gs` en V2 tiene los cambios
+3. **Deployment de prueba del backend.** `Codigo.gs` en V2 tiene los cambios
    de precio (H8) pero la Sheet real sigue corriendo la versión de V1;
    falta armar un deployment de prueba separado para no tocar producción
    al probar "Terminar y Pdf".
-5. **Filtrar el selector Grado según Tipo.** Hoy `GRADOS` es una lista única
-   compartida por todos los tipos, y A53/A106 (que en realidad son normas
-   de cañería, no un grado de acero) aparecen elegibles incluso para
-   Plancha, Perfil, etc. — donde no aplican y no calculan nada (sin aviso
-   claro de por qué). Falta un condicional en `initSelects()`/`selTipo`
-   change para mostrar A53/A106 solo cuando Tipo = Cañería (y ocultarlos,
-   o al menos avisar, para el resto).

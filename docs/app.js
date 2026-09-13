@@ -7,10 +7,13 @@
 const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbw3snjl4xousmjRGj9Fvwg2U1zXL-Exnhxam7TIrxRscW75fbf3FC77ooRyZyV-U3TxmA/exec';
 
 const TIPOS = ['Perfil cuadrado','Perfil rectangular','Perfil canal','Plancha','Angulo plegado',
-  'Angulo laminado','Viga UPN','Viga canal','Viga IPE','Viga IPN','Viga HEA','Viga HEB','Viga WF',
-  'Viga I','Viga H','Cañería','Redondo','Costanera','Pletina','Bobina','Perfil Especial','Otro'];
+  'Angulo laminado','Viga UPN','Viga IPE','Viga IPN','Viga HEA','Viga HEB','Viga WF',
+  'Viga I','Viga H','Viga canal','Cañería','Redondo','Costanera','Pletina','Bobina','Perfil Especial','Otro'];
 const GRADOS = ['SAE1020','S275jr','A36','A572','A653','A992','A242','A588','A502','A709','A792',
   'A913','270ES','345ES','A53','A106','Q355','Q235','otro'];
+const GRADOS_CANERIA = ['A53','A106'];                 // sólo tienen sentido en Cañería (norma, no grado real)
+// Tipos sin tabla/fórmula: el Charpy (e>=10mm) no se puede calcular solo, se declara a mano
+const TIPOS_CHARPY_MANUAL = ['Viga canal','Viga I','Viga H','Bobina','Perfil Especial','Otro'];
 
 // ==== estado ====
 const S = {
@@ -41,7 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const v = e.target.value.trim().replace(/\D/g,'');
     if (v) e.target.value = v.padStart(4,'0').slice(-4);
   });
-  $('#selTipo').addEventListener('change', () => { updateStdBtn(); recalcPeso(); recalcCharpyNote(); });
+  $('#selTipo').addEventListener('change', () => {
+    updateStdBtn(); renderGradoOptions(); applyGradoColor(); recalcPeso(); recalcCharpyNote();
+  });
   $('#selGrado').addEventListener('change', () => { applyGradoColor(); recalcPeso(); recalcCharpyNote(); });
   $('#chkId').addEventListener('change', () => { toggleIdLabel(); marcoIdent(); updateMuestrasPrev(); });
   $('#dlgSample').addEventListener('close', () => document.body.classList.remove('ident-on'));
@@ -96,8 +101,17 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==== helpers ====
 function initSelects(){
   $('#selTipo').innerHTML  = TIPOS.map(t => `<option${t==='Plancha'?' selected':''}>${t}</option>`).join('');
-  $('#selGrado').innerHTML = GRADOS.map(g => `<option${g==='A36'?' selected':''}>${g}</option>`).join('');
+  renderGradoOptions();
   updateStdBtn(); applyGradoColor();
+}
+// A53/A106 son normas de cañería, no un grado de acero: sólo aparecen elegibles si Tipo = Cañería.
+function renderGradoOptions(){
+  const tipo = $('#selTipo').value;
+  const sel = $('#selGrado');
+  const lista = tipo === 'Cañería' ? GRADOS : GRADOS.filter(g => !GRADOS_CANERIA.includes(g));
+  const prev = sel.value;
+  const valor = lista.includes(prev) ? prev : 'A36';
+  sel.innerHTML = lista.map(g => `<option${g===valor?' selected':''}>${g}</option>`).join('');
 }
 function gradoColor(g){
   g = String(g||'').toUpperCase();
@@ -308,9 +322,20 @@ function calcCharpy(tipo, dim, grado){
   }
 }
 
+// Resuelve Charpy para una colada guardada: calculado, o declarado a mano si el tipo lo requiere.
+function charpyDeColada(c){
+  if (TIPOS_CHARPY_MANUAL.includes(c.tipo)) return c.charpyManual == null ? null : !!c.charpyManual;
+  return calcCharpy(c.tipo, c.dimension, c.grado);
+}
+
 // Solo informativo — no toca el checkbox "Identificada" (20/40 ton), que es independiente.
+// Para tipos sin tabla (TIPOS_CHARPY_MANUAL) muestra el checkbox de declaración manual en su lugar.
 function recalcCharpyNote(){
-  const f = $('#formSample'), note = $('#identNote'); if (!note) return;
+  const f = $('#formSample'), note = $('#identNote'), manualLabel = $('#charpyManualLabel');
+  const manual = TIPOS_CHARPY_MANUAL.includes(f.tipo.value);
+  if (manualLabel) manualLabel.hidden = !manual;
+  if (!note) return;
+  if (manual){ note.textContent = ''; return; }
   const r = calcCharpy(f.tipo.value, f.dimension.value, f.grado.value);
   note.textContent = r == null ? '' : (r ? 'Ⓒ requiere Charpy (e≥10mm)' : 'sin Charpy (e<10mm)');
 }
@@ -515,7 +540,7 @@ function renderColadas(){
     const fuera = num(c.pos) < prevPos;
     prevPos = num(c.pos);
     const notacion = n>1 ? `${codes[0]} … ${codes[n-1]}` : codes[0];
-    const ch = calcCharpy(c.tipo, c.dimension, c.grado);
+    const ch = charpyDeColada(c);
     const li = document.createElement('li');
     if (c.identificada) li.className = 'ident';
     li.innerHTML = `<div class="body" data-v="${i}">
@@ -551,8 +576,8 @@ function calcularPrecioUF(coladas){
   const basicas = [], charpys = [];
   let sinClasificar = 0;
   coladas.forEach(c => {
-    const ch = calcCharpy(c.tipo, c.dimension, c.grado);   // e>=10mm, NADA que ver con "Identificada"
-    if (ch == null){ sinClasificar++; return; }            // tipo manual (Viga I/H, Bobina...): no se puede tasar solo
+    const ch = charpyDeColada(c);                          // e>=10mm calculado, o declarado a mano
+    if (ch == null){ sinClasificar++; return; }            // tipo manual sin declarar: no se puede tasar solo
     const n = nMuestras(c.peso, c.identificada);
     (ch ? charpys : basicas).push(n);
   });
@@ -600,7 +625,7 @@ function openVer(i){
     ['Unidades', num(c.cantidad)],
     ['Peso', num(c.peso) + ' kg'],
     ['Identificada', c.identificada ? '<span class="badge si">SÍ</span>' : '<span class="badge no">NO</span>'],
-    ['Charpy (e≥10mm)', (() => { const ch = calcCharpy(c.tipo, c.dimension, c.grado);
+    ['Charpy (e≥10mm)', (() => { const ch = charpyDeColada(c);
       return ch == null ? '<span class="badge no">s/d</span>' : (ch ? '<span class="badge si">CH</span>' : '<span class="badge no">NO</span>'); })()]
   ].map(([k,v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
   $('#verEditar').onclick = () => { $('#dlgVer').close(); openColada(i); };
@@ -615,11 +640,13 @@ function openColada(i){
   f.pos.value       = c.pos || pad2(maxPos + 1);
   f.tipo.value      = c.tipo || 'Plancha';
   f.dimension.value = c.dimension || '';
+  renderGradoOptions();                     // arma la lista de Grado según el Tipo antes de fijar el valor
   f.grado.value     = c.grado || 'A36';
   f.colada.value    = c.colada || '';
   f.cantidad.value  = c.cantidad || '';
   f.peso.value      = c.peso || '';
   f.identificado.checked = !!c.identificada;
+  f.charpyManual.checked = !!c.charpyManual;
   S.std = false;
   S.pesoTouched = (i >= 0 && !!c.peso);     // en edición se respeta el peso guardado
   f.peso.classList.toggle('peso-calc', !S.pesoTouched);
@@ -644,7 +671,8 @@ function onSampleSubmit(ev){
     tipo:f.tipo.value.trim(), dimension:f.dimension.value.trim(),
     grado:f.grado.value.trim(), colada:f.colada.value.trim(),
     cantidad:f.cantidad.value.trim(), peso:f.peso.value.trim(),
-    identificada:f.identificado.checked
+    identificada:f.identificado.checked,
+    charpyManual: TIPOS_CHARPY_MANUAL.includes(f.tipo.value.trim()) ? f.charpyManual.checked : null
   };
   if (!c.pos || !c.tipo || !num(c.peso)){
     ev.preventDefault(); alert('Pos. colada, Tipo y Peso son obligatorios'); return;
