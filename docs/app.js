@@ -278,7 +278,7 @@ const WF_I_EXCEP = ['10x22','12x26','14x22','14x30','16x26'];
 
 // ¿El lote requiere ensayo Charpy (e>=10mm según NCh203)? -> true / false / null (sin dato,
 // tipo no tabulado). NO tiene relación con el checkbox "Identificada" (ese es 20 vs 40 ton
-// de muestreo); esto es solo para el badge "CH" y la categoría de precio Básica/Charpy.
+// de muestreo); esto es solo para el badge "CH" y la categoría de precio Simple/Charpy.
 function calcCharpy(tipo, dim, grado){
   const N = dimsNum(dim);
   if (!N.length) return null;
@@ -567,6 +567,7 @@ function renderColadas(){
   $('#totMuestras').textContent = totM;
   $('#totKg').textContent = round(totKg / 1000);   // Ton
   $('#totU').textContent  = totU;
+  S.totTon = round(totKg / 1000);
   $('#btnOrdenar').hidden = !coladasDesordenadas();
   renderPrecio();
 }
@@ -585,7 +586,7 @@ function calcularPrecioUF(coladas){
     (ch ? charpys : basicas).push(n);
   });
 
-  // Básica (e<10mm): descuento único y plano — el valor base baja si hay más de X lotes
+  // Simple (e<10mm): descuento único y plano — el valor base baja si hay más de X lotes
   const nB = basicas.length;
   const adicB = num(P.basica.muestraAdicional);
   const baseB = nB >= P.basica.descuento.lotesMin ? P.basica.descuento.baseConDescuento : P.basica.base;
@@ -612,7 +613,7 @@ function renderPrecio(){
   if (!r){ p.hidden = true; return; }
   p.hidden = false;
   p.innerHTML = `Precio estimado: <b>${r.total} ${r.moneda}</b>` +
-    ` (Básica ${r.nBasica} lotes = ${r.totalBasica} ${r.moneda} · ` +
+    ` (Simple ${r.nBasica} lotes = ${r.totalBasica} ${r.moneda} · ` +
     `Charpy ${r.nCharpy} lotes${r.factorCharpy < 1 ? ' ×' + r.factorCharpy : ''} = ${r.totalCharpy} ${r.moneda})` +
     (r.sinClasificar ? ` · <span class="hint fucsia">${r.sinClasificar} lote${r.sinClasificar>1?'s':''} sin clasificar (revisar a mano)</span>` : '');
 }
@@ -698,7 +699,7 @@ async function generar(){
   const payload = withAuth({
     accion:'crear',
     ar:S.header.ar, ote:S.header.ote, ram:S.header.ram, fecha:S.header.fecha, sedeId:S.header.sedeId,
-    coladas:S.coladas, precio: precio ? precio.total : null
+    coladas:S.coladas, precio: precio ? precio.total : null, tonelaje: S.totTon || null
   });
   $('#btnGenerar').disabled = true;
   showWorking('Generando el reporte…<br><small>puede tardar unos segundos</small>');
