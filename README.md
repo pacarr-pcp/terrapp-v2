@@ -377,6 +377,19 @@ quedan como dos ideas separadas hasta que se decida si se fusionan.
   Pdf" confirmado de punta a punta, incluido el `Código.gs` real actualizado
   en Apps Script (nueva versión publicada sobre la implementación V2).
 - ✅ **V2 promovida a producción** — reemplaza a V1 como la app en uso.
+- ✅ **Fix: Charpy/peso mal calculados en cuadrado, costanera y ángulo
+  laminado** — el código asumía una posición fija para el espesor dentro
+  de la dimensión; al escribir el lado repetido (`100x100x5`) o los 4
+  números de una costanera en cualquier orden, tomaba un lado (o la
+  aleta) como si fuera el espesor, marcando Charpy en falso positivo y
+  sin encontrar la key de peso. Fix: el espesor es siempre el número más
+  chico de la sección (`seccionSimetrica()` / `seccionCostanera()`,
+  compartidas entre `calcCharpy()` y `pesoColada()`). De paso se migraron
+  las tablas `cuadrado`, `angulo` y `costanera` a notación completa
+  (`LADOxLADOxE`, `AxBx15xE`) para que las keys sean trazables contra el
+  catálogo real, y se agregó la tabla `angulo_plegado` (29 medidas
+  simétricas, hoja Precios `N31:O59`) con fallback a la fórmula de
+  plegado para asimétricos o medidas fuera de tabla.
 
 ### Abierto
 Sin pendientes activos por el momento. Próximo ajuste conocido: si cambian
