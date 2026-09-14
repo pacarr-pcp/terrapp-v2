@@ -1,11 +1,11 @@
 # TerrApp V2
 
-> **Fork de desarrollo.** Nace el 2026-09-13 a partir de TerrApp B2 (V1),
-> que sigue en producción tal cual, sin tocar, en
-> `C:\Users\pacar\proyectos\terrapp`. Mientras V2 no esté lista y probada
-> a fondo, la app en uso sigue siendo V1
-> (https://pacarr-pcp.github.io/terrapp/) — nada de lo que se haga aquí la
-> afecta.
+> **En producción.** Nació el 2026-09-13 como fork de desarrollo de
+> TerrApp B2 (V1). Tras validar el flujo completo (backend con
+> implementación real, tonelaje/precio en H8/G8, pesos e íconos), V2
+> reemplazó a V1 como la app en uso. V1 queda intacta en
+> `C:\Users\pacar\proyectos\terrapp` (https://pacarr-pcp.github.io/terrapp/)
+> como referencia histórica, sin desarrollo activo.
 
 Migración de la app de inspección en terreno (App Inventor + componente
 Spreadsheet) a **PWA + backend Apps Script**, manteniendo la misma Google
@@ -359,15 +359,27 @@ quedan como dos ideas separadas hasta que se decida si se fusionan.
   confirmó en `Archivo2` que **H8 se graba correctamente**; las filas y PDFs
   de prueba generados ya se borraron.
 
+- ✅ **Cañería 8" (excepción no estándar)** — en `caneria_std_a53` el
+  diámetro 8" queda con `e:5.56mm` (distinto de los demás, todos `9.52mm`),
+  a pedido explícito de PCP.
+- ✅ **Tonelaje en G8** — igual que el precio en H8: `S.totTon` (PWA) se
+  envía como `body.tonelaje` y el backend lo escribe en G8 (fila 8 oculta,
+  no sale en el PDF, sí queda en `Archivo2`).
+- ✅ **Ícono propio** — tablilla con checklist y sello de check, en el rojo
+  de acento de la app (reemplaza el pin azul original).
+- ✅ **Pesos "calculados" (sin tabla)** — canales, rectangulares, redondos,
+  etc. revisados y confirmados ok por PCP.
+- ✅ **Fase 2 — Precio por espesor / EP** — ya implementado: dos categorías
+  (Simple y Charpy), cada una con su base, su recargo por muestra adicional
+  y sus descuentos por volumen, parametrizadas en `data/precios.json`
+  (editable sin tocar código).
+- ✅ **Flujo completo probado desde la PWA** — login → colada → "Terminar y
+  Pdf" confirmado de punta a punta, incluido el `Código.gs` real actualizado
+  en Apps Script (nueva versión publicada sobre la implementación V2).
+- ✅ **V2 promovida a producción** — reemplaza a V1 como la app en uso.
+
 ### Abierto
-1. **Pesos "calculados" (sin tabla).** Revisar tipo por tipo: espesor por
-   perfil (viga = tabla por `tipo+alto`; perfil = otra posición) y dimensiones
-   incompletas tipo `0x0x…`.
-2. **Fase 2 — Precio por espesor / EP.** Falta la tabla de precios (la prepara
-   PCP) → `data/precios.json` o hoja `Precios`. Cuñas ya puestas:
-   `CFG.PRECIO`, `precioMuestra()`, `_espesor(tipo, dimension)`.
-3. **Probar el flujo completo desde la PWA.** El backend ya tiene su
-   implementación real (Versión 9) y el `doGet` responde bien; falta probar
-   login → colada → "Terminar y Pdf" desde la interfaz para confirmar de
-   punta a punta (el `_test()` directo en Apps Script ya confirmó que H8
-   se graba, pero no pasó por la PWA ni por `doPost`).
+Sin pendientes activos por el momento. Próximo ajuste conocido: si cambian
+valores o reglas de precio, PCP los edita directo en `data/precios.json`
+(o pide ayuda para editar `calcularPrecioUF()` en `app.js` si el cambio es
+de lógica, no solo de parámetros).
