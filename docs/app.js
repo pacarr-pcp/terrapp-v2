@@ -4,11 +4,10 @@
    sólo la URL pública del backend. */
 
 // ==== CONFIG ====
-// ⚠️ TEMPORAL: apunta a la "implementación de prueba" (URL /dev) del mismo script,
-// que corre el código guardado más recientemente (con la escritura de precio en H8).
-// La implementación de PRODUCCIÓN (/exec, usada por V1) sigue fija en su versión
-// congelada y no se toca. Antes de considerar V2 "final", volver a la URL /exec real.
-const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbweTLM7M9aw7JrQSmGTg-6cTbuGZ_hXHsRV2cA1zX1X/dev';
+// Implementación propia de V2 (Versión 9, 13-sep-2026), separada de la de V1:
+// misma planilla, mismo script base, pero con precio en H8, cañería A53/A106
+// unificada y Charpy. La implementación de V1 (/exec distinto) sigue intacta.
+const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbxkJoBo5jTZqMFs5adXjcDQeKs7X1eO6c6TSQly7xjB8eTSjT6ceJltGgXYR_Mt34NN7Q/exec';
 
 const TIPOS = ['Perfil cuadrado','Perfil rectangular','Perfil canal','Plancha','Angulo plegado',
   'Angulo laminado','Viga UPN','Viga IPE','Viga IPN','Viga HEA','Viga HEB','Viga WF',
