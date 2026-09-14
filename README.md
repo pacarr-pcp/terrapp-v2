@@ -346,6 +346,19 @@ quedan como dos ideas separadas hasta que se decida si se fusionan.
   propio, en vez de quedar sin clasificar por defecto.
 - ✅ **Orden del selector Tipo** — "Viga canal" se movió después de "Viga H"
   (antes quedaba entre UPN e IPE, fuera de lugar).
+- ✅ **Backend V2 verificado en un deployment de prueba** — se pegó el
+  `Código.gs` completo de este repo en el proyecto de Apps Script real
+  (mismo script bound a la Sheet; V1 sigue con su implementación de
+  producción fija en su versión antigua, sin tocar) y se usó su
+  "implementación de prueba" (URL `/dev`, corre siempre el código guardado
+  más reciente, solo accesible con permiso de edición al script — ni
+  siquiera hace falta crear una implementación nueva). `BACKEND_URL` en
+  `docs/app.js` apunta ahí **temporalmente**. Se corrió `_test()` con un
+  precio de prueba y se confirmó en `Archivo2` que **H8 sí se graba
+  correctamente** (columna H de la fila KEY copiada). Las filas y PDFs de
+  prueba generados ya se borraron. Antes de dar V2 por "final", falta
+  volver `BACKEND_URL` a una URL `/exec` real cuando se decida promover
+  los cambios a producción.
 
 ### Abierto
 1. **Pesos "calculados" (sin tabla).** Revisar tipo por tipo: espesor por
@@ -354,7 +367,6 @@ quedan como dos ideas separadas hasta que se decida si se fusionan.
 2. **Fase 2 — Precio por espesor / EP.** Falta la tabla de precios (la prepara
    PCP) → `data/precios.json` o hoja `Precios`. Cuñas ya puestas:
    `CFG.PRECIO`, `precioMuestra()`, `_espesor(tipo, dimension)`.
-3. **Deployment de prueba del backend.** `Codigo.gs` en V2 tiene los cambios
-   de precio (H8) pero la Sheet real sigue corriendo la versión de V1;
-   falta armar un deployment de prueba separado para no tocar producción
-   al probar "Terminar y Pdf".
+3. **Promover a producción.** Cuando se decida, cambiar `BACKEND_URL` a una
+   implementación `/exec` real (nueva o reemplazando la de V1) — hoy sigue
+   apuntando a la URL de prueba `/dev`.

@@ -4,7 +4,11 @@
    sólo la URL pública del backend. */
 
 // ==== CONFIG ====
-const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbw3snjl4xousmjRGj9Fvwg2U1zXL-Exnhxam7TIrxRscW75fbf3FC77ooRyZyV-U3TxmA/exec';
+// ⚠️ TEMPORAL: apunta a la "implementación de prueba" (URL /dev) del mismo script,
+// que corre el código guardado más recientemente (con la escritura de precio en H8).
+// La implementación de PRODUCCIÓN (/exec, usada por V1) sigue fija en su versión
+// congelada y no se toca. Antes de considerar V2 "final", volver a la URL /exec real.
+const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbweTLM7M9aw7JrQSmGTg-6cTbuGZ_hXHsRV2cA1zX1X/dev';
 
 const TIPOS = ['Perfil cuadrado','Perfil rectangular','Perfil canal','Plancha','Angulo plegado',
   'Angulo laminado','Viga UPN','Viga IPE','Viga IPN','Viga HEA','Viga HEB','Viga WF',
