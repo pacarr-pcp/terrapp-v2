@@ -346,19 +346,18 @@ quedan como dos ideas separadas hasta que se decida si se fusionan.
   propio, en vez de quedar sin clasificar por defecto.
 - ✅ **Orden del selector Tipo** — "Viga canal" se movió después de "Viga H"
   (antes quedaba entre UPN e IPE, fuera de lugar).
-- ✅ **Backend V2 verificado en un deployment de prueba** — se pegó el
-  `Código.gs` completo de este repo en el proyecto de Apps Script real
-  (mismo script bound a la Sheet; V1 sigue con su implementación de
-  producción fija en su versión antigua, sin tocar) y se usó su
-  "implementación de prueba" (URL `/dev`, corre siempre el código guardado
-  más reciente, solo accesible con permiso de edición al script — ni
-  siquiera hace falta crear una implementación nueva). `BACKEND_URL` en
-  `docs/app.js` apunta ahí **temporalmente**. Se corrió `_test()` con un
-  precio de prueba y se confirmó en `Archivo2` que **H8 sí se graba
-  correctamente** (columna H de la fila KEY copiada). Las filas y PDFs de
-  prueba generados ya se borraron. Antes de dar V2 por "final", falta
-  volver `BACKEND_URL` a una URL `/exec` real cuando se decida promover
-  los cambios a producción.
+- ✅ **Backend V2 con implementación propia (real, no de prueba)** — se pegó
+  el `Código.gs` completo de este repo en el proyecto de Apps Script (mismo
+  script bound a la Sheet que usa V1) y se creó una **implementación nueva**
+  (Web App, Versión 9, "Ejecutar como Yo" / "Cualquier usuario") separada de
+  la de V1 — cada una con su propia URL `/exec`, ninguna pisa a la otra.
+  `BACKEND_URL` en `docs/app.js` ya apunta a la de V2 de forma definitiva
+  (no es una URL de prueba). Se descartó primero la URL `/dev` de
+  "implementación de prueba": no sirve para `fetch()` programático desde la
+  PWA porque exige sesión interactiva y devuelve una página de autorización
+  en vez de JSON. Se verificó `_test()` con un precio de prueba y se
+  confirmó en `Archivo2` que **H8 se graba correctamente**; las filas y PDFs
+  de prueba generados ya se borraron.
 
 ### Abierto
 1. **Pesos "calculados" (sin tabla).** Revisar tipo por tipo: espesor por
@@ -367,6 +366,8 @@ quedan como dos ideas separadas hasta que se decida si se fusionan.
 2. **Fase 2 — Precio por espesor / EP.** Falta la tabla de precios (la prepara
    PCP) → `data/precios.json` o hoja `Precios`. Cuñas ya puestas:
    `CFG.PRECIO`, `precioMuestra()`, `_espesor(tipo, dimension)`.
-3. **Promover a producción.** Cuando se decida, cambiar `BACKEND_URL` a una
-   implementación `/exec` real (nueva o reemplazando la de V1) — hoy sigue
-   apuntando a la URL de prueba `/dev`.
+3. **Probar el flujo completo desde la PWA.** El backend ya tiene su
+   implementación real (Versión 9) y el `doGet` responde bien; falta probar
+   login → colada → "Terminar y Pdf" desde la interfaz para confirmar de
+   punta a punta (el `_test()` directo en Apps Script ya confirmó que H8
+   se graba, pero no pasó por la PWA ni por `doPost`).
