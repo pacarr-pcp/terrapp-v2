@@ -177,6 +177,23 @@ function dimsNum(dim){
 }
 function pick(a,b){ return (a === undefined || a === null) ? b : a; }
 
+// Perfiles simétricos (cuadrado, ángulo laminado): 2 o 3 números antes del largo.
+// El espesor es SIEMPRE el número más chico (a veces se repite el lado, a veces no,
+// pero nunca es más grueso que el lado). El lado es el más grande.
+function seccionSimetrica(s){
+  if (s.length < 2) return null;
+  const ord = [...s].sort((a,b) => a - b);
+  return { espesor: ord[0], lado: ord[ord.length - 1] };
+}
+// Costanera: siempre 4 números antes del largo (2 alas + aleta fija ~15mm + espesor,
+// en cualquier orden). El espesor es el más chico; la aleta es el 2º más chico
+// (siempre menor que las alas); las 2 alas son los 2 números más grandes.
+function seccionCostanera(s){
+  if (s.length !== 4) return null;
+  const ord = [...s].sort((a,b) => a - b);
+  return { espesor: ord[0], aleta: ord[1], b: ord[2], a: ord[3] };
+}
+
 // -> { kg, via } o null.  El largo va SIEMPRE al final de "dim" (en mm).
 function pesoColada(tipo, dim, cant, grado){
   const N = dimsNum(dim), q = num(cant);
@@ -206,9 +223,10 @@ function pesoColada(tipo, dim, cant, grado){
       return t != null ? done(t*L*q,'tabla') : done(plegado(2*a+2*b,4,e),'plegado');
     }
     case 'Perfil cuadrado': {
-      if (s.length < 2) return null;
-      const [a,e] = s, t = lin('cuadrado',`${a}x${e}`);
-      return t != null ? done(t*L*q,'tabla') : done(plegado(4*a,4,e),'plegado');
+      const sec = seccionSimetrica(s);
+      if (!sec) return null;
+      const t = lin('cuadrado',`${sec.lado}x${sec.lado}x${sec.espesor}`);
+      return t != null ? done(t*L*q,'tabla') : done(plegado(4*sec.lado,4,sec.espesor),'plegado');
     }
     case 'Perfil canal': {
       if (s.length < 3) return null;
@@ -217,22 +235,27 @@ function pesoColada(tipo, dim, cant, grado){
       return t != null ? done(t*L*q,'tabla') : done(plegado(a+2*b,2,e),'plegado');
     }
     case 'Costanera': {
-      let sc = s;
-      if (sc.length === 4 && sc[2] === 15) sc = [sc[0],sc[1],sc[3]];  // pliegue 15 implícito
-      if (sc.length < 3) return null;
-      const t = lin2('costanera',sc[0],sc[1],sc[2]);
+      const sec = seccionCostanera(s);
+      if (!sec) return null;
+      const t = lin('costanera',`${sec.a}x${sec.b}x${sec.aleta}x${sec.espesor}`);
       return t != null ? done(t*L*q,'tabla') : null;                  // sin fórmula → blanco
     }
     case 'Angulo laminado': {
-      if (s.length < 2) return null;
-      const t = lin('angulo',`${s[0]}x${s[1]}`);
+      const sec = seccionSimetrica(s);
+      if (!sec) return null;
+      const t = lin('angulo',`${sec.lado}x${sec.lado}x${sec.espesor}`);
       return t != null ? done(t*L*q,'tabla') : null;                  // blanco
     }
     case 'Angulo plegado': {
       if (s.length < 2) return null;
-      const e = s[s.length-1];
-      const a = s[0], b = s.length >= 3 ? s[1] : s[0];
-      return done(plegado(a+b,1,e),'plegado');
+      const ord = [...s].sort((x,y) => x - y);
+      const e = ord[0], resto = ord.slice(1);                         // 1 o 2 alas
+      const a = resto[0], b = resto.length > 1 ? resto[1] : resto[0];
+      if (a === b) {                                                  // simétrico -> tabla primero
+        const t = lin('angulo_plegado',`${a}x${a}x${e}`);
+        if (t != null) return done(t*L*q,'tabla');
+      }
+      return done(plegado(a+b,1,e),'plegado');                        // asimétrico o fuera de tabla
     }
     case 'Viga UPN': case 'Viga IPE': case 'Viga IPN': case 'Viga HEA': case 'Viga HEB': {
       const tab = { 'Viga UPN':'viga_upn','Viga IPE':'viga_ipe','Viga IPN':'viga_ipn',
@@ -308,14 +331,18 @@ function calcCharpy(tipo, dim, grado){
     }
     case 'Plancha': case 'Pletina':
       return N.length >= 3 ? N[0] >= 10 : null;                 // e x Ancho x Largo (e = N[0], igual que el botón Std)
-    case 'Perfil rectangular': case 'Perfil canal': case 'Costanera':
-      return s.length >= 3 ? s[2] >= 10 : null;                 // AxBxE
-    case 'Perfil cuadrado':
-      return s.length >= 2 ? s[1] >= 10 : null;                 // LADOxE
-    case 'Angulo laminado':
-      return s.length >= 2 ? s[1] >= 10 : null;                 // ALAxE
+    case 'Perfil rectangular': case 'Perfil canal':
+      return s.length >= 3 ? s[2] >= 10 : null;                 // AxBxE (a≠b, sin ambigüedad)
+    case 'Costanera': {
+      const sec = seccionCostanera(s);
+      return sec ? sec.espesor >= 10 : null;
+    }
+    case 'Perfil cuadrado': case 'Angulo laminado': {
+      const sec = seccionSimetrica(s);
+      return sec ? sec.espesor >= 10 : null;
+    }
     case 'Angulo plegado':
-      return s.length >= 1 ? s[s.length-1] >= 10 : null;
+      return s.length >= 1 ? Math.min(...s) >= 10 : null;
     case 'Cañería': {
       const r = pesoColada(tipo, dim, 1, grado);                // reutiliza la tabla para obtener 'e'
       return r && r.e != null ? r.e >= 10 : null;
