@@ -371,21 +371,20 @@ function recalcCharpyNote(){
 }
 
 // Etiqueta junto a "Peso colada (kg)": de dónde salió el valor (tabla exacta vs.
-// calculado por fórmula geométrica). null = ocultarla (peso manual o sin resultado).
-function setPesoVia(cls, txt){
+// calculado por fórmula geométrica). '' = ocultarla (peso manual o sin resultado).
+function setPesoVia(txt){
   const via = $('#pesoVia'); if (!via) return;
-  via.hidden = !cls;
-  via.className = 'pill via' + (cls ? ' ' + cls : '');
+  via.hidden = !txt;
   via.textContent = txt || '';
 }
 function recalcPeso(){
   const f = $('#formSample'), note = $('#pesoCalcNote');
   const setNote = t => { if (note) note.textContent = t; };
-  if (S.pesoTouched){ setNote(''); setPesoVia(null); return; }
+  if (S.pesoTouched){ setNote(''); setPesoVia(''); return; }
   const r = pesoColada(f.tipo.value, f.dimension.value, f.cantidad.value, f.grado.value);
   if (!r){
     f.peso.value = ''; f.peso.classList.remove('peso-calc');
-    setPesoVia(null);
+    setPesoVia('');
     const g = String(f.grado.value||'').toUpperCase();
     setNote(f.tipo.value === 'Cañería' && g !== 'A53' && g !== 'A106' && f.dimension.value.trim()
       ? 'para calcular por tabla, Grado debe ser A53 o A106 (ej. 12x80x6000); con otro grado se espera ØextxØintxLargo'
@@ -394,8 +393,7 @@ function recalcPeso(){
   }
   f.peso.value = Math.round(r.kg);
   f.peso.classList.add('peso-calc');
-  const esTabla = r.via === 'tabla';
-  setPesoVia(esTabla ? 'via-tabla' : 'via-calc', esTabla ? 'de tabla' : 'calculado');
+  setPesoVia(r.via === 'tabla' ? '{de tabla}' : '{calculado*}');
   setNote('editable');
   updateMuestrasPrev();
 }
