@@ -41,6 +41,9 @@ a.as-btn{display:block;text-align:center;text-decoration:none}
 .pill{display:inline-block;min-width:1.6em;text-align:center;background:var(--brand);
   color:#fff;border-radius:999px;padding:.05em .5em;font-size:.85rem}
 .pill.ch{background:#b91c1c}
+.lbl-row{display:flex;align-items:center;gap:.4rem}
+.pill.via-tabla{background:#16a34a}
+.pill.via-calc{background:#1d4ed8}
 .coladas-top{display:flex;justify-content:space-between;align-items:center;gap:.6rem}
 #coladasInfo{color:#991b1b;font-weight:600}
 #btnAddSample{background:#991b1b;color:#fff;border-color:#7f1d1d;font-weight:700}
