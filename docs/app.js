@@ -502,7 +502,8 @@ function renderSedeOpts(filtro){
 }
 
 async function buscarOte(){
-  const ote = $('#inOte').value.trim();
+  const ote = $('#inOte').value.trim().replace(/\D/g,'').replace(/^0+/, '');
+  $('#inOte').value = ote;                  // saca ceros a la izquierda (ej. "0216" -> "216")
   const box = $('#sedeBox'); box.innerHTML = ''; S.header.sedeId = ''; SEDES = [];
   if (!ote) return;
   box.textContent = 'Buscando…';
@@ -541,7 +542,7 @@ function goSamples(){
   if (!/^\d{4}$/.test(ar)) return (msg.textContent = 'AR: 4 dígitos');
   if (!ote)   return (msg.textContent = 'Falta el OTE');
   if (!fecha) return (msg.textContent = 'Falta la fecha');
-  if (!S.header.sedeId) return (msg.textContent = 'Presiona "Buscar" y elige el solicitante / ubicación');
+  if (!S.header.sedeId) return (msg.textContent = 'Presiona "Validar" y elige una opción');
   S.header.ar = ar; S.header.ote = ote; S.header.ram = ram; S.header.fecha = toCL(fecha);
   renderColadas(); show('viewSamples');
 }

@@ -31,6 +31,7 @@ button{font:inherit;min-height:44px;border-radius:9px;cursor:pointer;padding:.6r
 .primary{background:var(--brand);color:#fff;border:1px solid var(--brand-d);font-weight:600}
 .primary:active{background:var(--brand-d)}
 .secondary{background:var(--card);color:var(--brand);border:1px solid var(--brand)}
+.outline{background:transparent;color:var(--brand);border:1px solid var(--brand)}
 a.as-btn{display:block;text-align:center;text-decoration:none}
 .actions{display:flex;justify-content:space-between;align-items:center;gap:.6rem;margin-top:.4rem}
 .msg{margin:0;font-size:.9rem;color:var(--bad);min-height:1.2em}
