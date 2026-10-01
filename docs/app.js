@@ -86,6 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#btnAddSample').onclick  = () => openColada(-1);
   $('#btnOrdenar').onclick    = ordenarColadas;
   $('#verCerrar').onclick     = () => $('#dlgVer').close();
+  $('#btnResumen').onclick    = openResumen;
+  $('#resumenCerrar').onclick = () => $('#dlgResumen').close();
   $('#btnGenerar').onclick    = generar;
   $('#btnNueva').onclick      = () => { resetInspeccion(); show('viewHeader'); };
   $('#formSample').addEventListener('submit', onSampleSubmit);
@@ -652,6 +654,48 @@ function renderPrecio(){
     ` (Simple ${r.nBasica} lotes = ${r.totalBasica} ${r.moneda} · ` +
     `Charpy ${r.nCharpy} lotes${r.factorCharpy < 1 ? ' ×' + r.factorCharpy : ''} = ${r.totalCharpy} ${r.moneda})` +
     (r.sinClasificar ? ` · <span class="hint fucsia">${r.sinClasificar} lote${r.sinClasificar>1?'s':''} sin clasificar (revisar a mano)</span>` : '');
+}
+
+// Resumen de encabezado + todas las coladas, de solo lectura, para revisar
+// antes de "Terminar y Pdf" (una vez generado el PDF no hay vuelta atrás).
+function openResumen(){
+  const sede = SEDES.find(x => x.id === S.header.sedeId);
+  $('#resumenHead').innerHTML = [
+    ['RAM', esc(S.header.ram || '—')],
+    ['AR', esc(S.header.ar || '—')],
+    ['OTE', esc(S.header.ote || '—')],
+    ['Fecha', esc(S.header.fecha || '—')],
+    ['Solicitante', esc(sede ? sede.nombre : '—')],
+    ['Cliente', esc(sede ? sede.cliente : '—')],
+    ['Lugar', esc(sede ? [sede.sede, sede.comuna].filter(Boolean).join(' · ') : '—')]
+  ].map(([k,v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+
+  let prevPos = -Infinity;
+  $('#resumenFilas').innerHTML = S.coladas.map(c => {
+    const fuera = num(c.pos) < prevPos; prevPos = num(c.pos);
+    const ch = charpyDeColada(c);
+    const chTxt = ch == null ? 's/d' : (ch ? 'CH' : '—');
+    return `<tr>
+      <td class="${fuera ? 'fuera' : ''}">${esc(c.pos)}</td>
+      <td>${esc(c.tipo)}</td>
+      <td>${esc(c.dimension || '—')}</td>
+      <td style="color:${gradoColor(c.grado)}">${esc(c.grado || '—')}</td>
+      <td>${esc(c.colada || '—')}</td>
+      <td>${num(c.cantidad)}</td>
+      <td>${num(c.peso)}</td>
+      <td>${c.identificada ? 'Sí' : 'No'}</td>
+      <td>${chTxt}</td>
+      <td>${nMuestras(c.peso, c.identificada)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="10">Sin coladas aún</td></tr>';
+
+  const r = calcularPrecioUF(S.coladas);
+  const totM = S.coladas.reduce((a,c) => a + nMuestras(c.peso, c.identificada), 0);
+  const totKg = S.coladas.reduce((a,c) => a + num(c.peso), 0);
+  $('#resumenPie').textContent = `${S.coladas.length} coladas · ${totM} muestras · ${round(totKg / 1000)} Ton` +
+    (r ? ` · ${r.total} ${r.moneda}` : '');
+
+  $('#dlgResumen').showModal();
 }
 
 function openVer(i){

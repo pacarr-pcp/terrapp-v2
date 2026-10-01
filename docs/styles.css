@@ -114,6 +114,13 @@ body.ident-on #dlgSample{border:3px solid #16a34a}
 .result{display:grid;grid-template-columns:auto 1fr;gap:.35rem .9rem;margin:.2rem 0 .6rem}
 .result dt{color:var(--muted);font-size:.85rem}
 .result dd{margin:0;font-weight:600}
+#dlgResumen{max-width:96vw;width:96vw}
+.tabla-scroll{overflow-x:auto;margin:0 -1.1rem;padding:0 1.1rem}
+.resumen-tabla{border-collapse:collapse;width:100%;font-size:.78rem;white-space:nowrap}
+.resumen-tabla th,.resumen-tabla td{padding:.35rem .5rem;border-bottom:1px solid var(--line);text-align:left}
+.resumen-tabla th{color:var(--muted);font-weight:600}
+.resumen-tabla td.fuera{color:#c026d3}
+#resumenPie{font-weight:600;margin:.6rem 0 0}
 .sedebox{display:flex;flex-direction:column;gap:.4rem}
 .sedebox p{margin:0}
 #viewMenu button{font-size:1.05rem;padding:.9rem}

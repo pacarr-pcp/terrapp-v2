@@ -88,6 +88,7 @@
     <button id="btnAddSample" class="secondary">+ Agregar colada</button>
     <div class="actions">
       <button id="btnBackHeader" class="link">‹ Cabecera</button>
+      <button id="btnResumen" class="secondary">Resumen</button>
       <button id="btnGenerar" class="primary">Terminar y Pdf</button>
     </div>
     <p id="samplesMsg" class="msg" role="alert"></p>
@@ -187,6 +188,27 @@
   <menu>
     <button type="button" id="verEditar" class="secondary">Editar</button>
     <button type="button" id="verCerrar" class="primary">Cerrar</button>
+  </menu>
+</dialog>
+
+<!-- ───────── DIÁLOGO RESUMEN (revisión antes del Pdf) ───────── -->
+<dialog id="dlgResumen">
+  <h2>Resumen de inspección</h2>
+  <dl class="result" id="resumenHead"></dl>
+  <div class="tabla-scroll">
+    <table class="resumen-tabla" id="resumenTabla">
+      <thead>
+        <tr>
+          <th>Pos</th><th>Tipo</th><th>Dim.</th><th>Grado</th><th>Colada</th>
+          <th>Cant</th><th>Peso</th><th>Id.</th><th>CH</th><th>Mstr</th>
+        </tr>
+      </thead>
+      <tbody id="resumenFilas"></tbody>
+    </table>
+  </div>
+  <p class="hint" id="resumenPie"></p>
+  <menu>
+    <button type="button" id="resumenCerrar" class="primary">Cerrar</button>
   </menu>
 </dialog>
 
