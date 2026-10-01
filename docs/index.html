@@ -78,7 +78,10 @@
 
   <!-- ───────── COLADAS ───────── -->
   <section id="viewSamples" class="view" hidden>
-    <h1>Coladas <span id="sampleCount" class="pill">0</span></h1>
+    <div class="head-row">
+      <h1>Coladas <span id="sampleCount" class="pill">0</span></h1>
+      <button id="btnResumen" class="link">Resumen</button>
+    </div>
     <div class="coladas-top">
       <p id="coladasInfo" class="hint"><b id="totMuestras">0</b> muestras · <b id="totKg">0</b> Ton · <span id="totU">0</span> unidades</p>
       <button id="btnOrdenar" class="link" hidden>Ordenar</button>
@@ -88,7 +91,6 @@
     <button id="btnAddSample" class="secondary">+ Agregar colada</button>
     <div class="actions">
       <button id="btnBackHeader" class="link">‹ Cabecera</button>
-      <button id="btnResumen" class="secondary">Resumen</button>
       <button id="btnGenerar" class="primary">Terminar y Pdf</button>
     </div>
     <p id="samplesMsg" class="msg" role="alert"></p>
